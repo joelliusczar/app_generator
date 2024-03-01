@@ -1,0 +1,79 @@
+body {
+	margin: 0;
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+		'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+		sans-serif;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+code {
+	font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+		monospace;
+}
+
+
+
+.app-form-select.form-select.MuiAutocomplete-option {
+	display: block;
+}
+
+.form-select.select-subtext, .form-select.select-subtext.MuiAutocomplete-paper {
+	line-height: unset;	
+}
+
+.role-item {
+	margin: .5em;
+}
+
+.rule-name {
+	font-weight: bold;
+}
+
+.rule-body {
+	padding:.5em;
+}
+
+.rule-entry-body {
+	padding:1em;
+}
+
+.user-role-container {
+	width: 100%;
+}
+
+.rule-entry.MuiGrid-container{
+	align-items: flex-end;
+	margin-bottom: 1em;
+	justify-content: flex-start;
+}
+
+.rule-name-input.MuiGrid-container {
+	margin-bottom: 1em;
+}
+
+.small-number-input {
+	width: 3em;
+}
+
+.between-text {
+	margin: .5em;
+	display: inline-block;
+	vertical-align: top;
+}
+
+.rule-entry-first-text {
+	display: inline-block;
+	width: 5em;
+	margin: .5em;
+}
+
+
+.dropdown-field {
+	min-width: 195px;
+	display: inline-block;
+}
+
+.drawer {
+	width: 240px
+}

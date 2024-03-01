@@ -1,0 +1,56 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: Current File",
+      "type": "python",
+      "python": "${command:python.interpreterPath}",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "preLaunchTask": "Set unit test env",
+      "justMyCode": false,
+      "env": {
+        "PTHONPATH": "${workspaceFolder}/src/<%= projectName %>_libs"
+      }
+    },
+    {
+      "name": "Python: API",
+      "type": "python",
+      "python": "${command:python.interpreterPath}",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/api/index.py",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": {
+        "PTHONPATH": "${workspaceFolder}/src/<%= projectName %>_libs"
+      },
+      "args": [
+        "${userHome}/.ssh/<%= projectName %>_localhost_debug.private.key.pem",
+        "${userHome}/.ssh/<%= projectName %>_localhost_debug.public.key.crt"
+      ]
+    },
+    {
+      "name": "Python: nginx API",
+      "type": "python",
+      "python": "${command:python.interpreterPath}",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/api/index.py",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": {
+        "PTHONPATH": "${workspaceFolder}/src/<%= projectName %>_libs"
+      }
+    },
+    {
+      "name": "Debug Unit Test",
+      "type": "python",
+      "preLaunchTask": "Set unit test env",
+      "request": "test",
+      "justMyCode": true,
+  },
+  ]
+}
