@@ -348,31 +348,6 @@ get_ssl_public() (
 	get_ssl_vars | stdin_json_extract_value 'publickey'
 )
 
-replace_lib_files() (
-	process_global_vars "$@" &&
-	__replace_lib_files__
-)
-
-
-create_py_env_in_app_trunk() (
-	process_global_vars "$@" &&
-	sync_requirement_list &&
-	create_py_env_in_dir &&
-	__replace_lib_files__
-)
-
-__install_py_env__() {
-	sync_requirement_list &&
-	create_py_env_in_app_trunk
-}
-
-install_py_env() {
-	unset_globals
-	process_global_vars "$@" &&
-	__install_py_env__ &&
-	echo "done installing py env"
-}
-
 
 set_python_version_const() {
 	#python version info
@@ -639,6 +614,31 @@ __get_remote_intermediate_key__() (
 	echo "/etc/ssl/certs/${<%= ucPrefix %>_PROJ_NAME}.intermediate.key.pem"
 )
 
+replace_lib_files() (
+	process_global_vars "$@" &&
+	__replace_lib_files__
+)
+
+
+create_py_env_in_app_trunk() (
+	process_global_vars "$@" &&
+	sync_requirement_list &&
+	create_py_env_in_dir &&
+	__replace_lib_files__
+)
+
+__install_py_env__() {
+	sync_requirement_list &&
+	create_py_env_in_app_trunk
+}
+
+install_py_env() {
+	unset_globals
+	process_global_vars "$@" &&
+	__install_py_env__ &&
+	echo "done installing py env"
+}
+
 get_libs_dest_dir() (
 	__set_env_path_var__ >&2 #ensure that we can see <%= lcPrefix %>-python
 	set_python_version_const || return "$?"
@@ -837,7 +837,7 @@ from <%= projectName %>_libs.services import (
 	DbRootConnectionService,
 	DbOwnerConnectionService
 )
-dbName="<%= projectName %>_db"
+dbName="<%= lcProjectName %>_db"
 with DbRootConnectionService() as rootConnService:
 	rootConnService.create_db(dbName)
 	rootConnService.create_owner()
@@ -867,7 +867,7 @@ from <%= projectName %>_libs.services import (
 
 with DbRootConnectionService() as rootConnService:
 	rootConnService.drop_all_users()
-	rootConnService.drop_database("<%= projectName %>_db")
+	rootConnService.drop_database("<%= lcProjectName %>_db")
 
 EOF
 	)
@@ -1396,6 +1396,11 @@ restart_nginx() (
 	echo 'Done starting/restarting up nginx'
 )
 
+refresh_certs() (
+	setup_ssl_cert_nginx &&
+	restart_nginx
+)
+
 print_nginx_conf_location() (
 	process_global_vars "$@" >/dev/null &&
 	confDirInclude=$(get_nginx_conf_dir_include) &&
@@ -1452,7 +1457,7 @@ __get_remote_export_script__() (
 	output="${output} export PB_SECRET='$(__get_pb_secret__)';" &&
 	output="${output} export PB_API_KEY='$(__get_pb_api_key__)';" &&
 	output="${output} export <%= ucPrefix %>_AUTH_SECRET_KEY='$(__get_<%= lcPrefix %>_auth_key__)';" &&
-	output="${output} export <%= ucPrefix %>_DATABASE_NAME='<%= projectName %>_db';" &&
+	output="${output} export <%= ucPrefix %>_DATABASE_NAME='<%= lcProjectName %>_db';" &&
 	output="${output} export __DB_SETUP_PASS__='$(__get_db_setup_key__)';" &&
 	output="${output} export <%= ucPrefix %>_DB_PASS_OWNER='$(__get_db_owner_key__)';" &&
 	output="${output} export <%= ucPrefix %>_DB_PASS_API='$(__get_api_db_user_key__)';" &&
@@ -1793,7 +1798,6 @@ define_app_root_terms() {
 
 	export <%= ucPrefix %>_LIB_NAME="$<%= ucPrefix %>_PROJ_NAME"_libs
 	export <%= ucPrefix %>_APP_NAME="$<%= ucPrefix %>_PROJ_NAME"_app
-
 	echo "top level terms defined"
 }
 

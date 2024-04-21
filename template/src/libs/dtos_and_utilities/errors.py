@@ -11,3 +11,6 @@ class IllegalOperationError(RuntimeError):
 
 class AlternateValueError(Exception):
 	pass
+
+class <%= ucPrefix %>NotImplementedError(Exception):
+	pass

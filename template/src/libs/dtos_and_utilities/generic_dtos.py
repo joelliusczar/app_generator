@@ -1,16 +1,17 @@
-from typing import\
-	List,\
-	TypeVar,\
+from typing import (
+	List,
+	TypeVar,
 	Generic
-from pydantic import BaseModel as MCBaseClass, ConfigDict
+)
+from pydantic import BaseModel as <%= ucPrefix %>BaseClass, ConfigDict
 
 
 T = TypeVar("T")
 
-class FrozenBaseClass(MCBaseClass):
+class FrozenBaseClass(<%= ucPrefix %>BaseClass):
 	model_config = ConfigDict(frozen=True)
 
-class ListData(MCBaseClass, Generic[T]):
+class ListData(<%= ucPrefix %>BaseClass, Generic[T]):
 	items: List[T]
 
 
