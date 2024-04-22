@@ -420,10 +420,12 @@ deployment_local_env_check() (
 
 	[ -z "$<%= ucPrefix %>_LOCAL_REPO_PATH" ] &&
 	echo 'environmental var <%= ucPrefix %>_LOCAL_REPO_PATH not set'
+<% if db == "mysql" %>
 	[ -z $(__get_db_setup_key__) ] &&
 	echo 'deployment var __DB_SETUP_PASS__ not set in keys'
 	[ -z $(__get_db_owner_key__) ] &&
 	echo 'deployment var <%= ucPrefix %>_DB_PASS_OWNER not set in keys'
+<% end %>
 
 	#definitely problems if missing
 	[ -z "$<%= ucPrefix %>_REPO_URL" ] &&
@@ -452,12 +454,13 @@ deployment_local_env_check() (
 	echo 'deployment var <%= ucPrefix %>_AUTH_SECRET_KEY not set in keys'
 	track_exit_code
 
-
+<% if db == "mysql" %>
 	#db
 	[ -z $(__get_api_db_user_key__) ] &&
 	echo 'deployment var <%= ucPrefix %>_DB_PASS_API not set in keys'
 	track_exit_code
 	return "$fnExitCode"
+<% end %>
 )
 
 deployment_server_env_check() (
@@ -465,11 +468,12 @@ deployment_server_env_check() (
 	#possibly problems if missing
 	[ -z "$<%= ucPrefix %>_LOCAL_REPO_PATH" ] &&
 	echo 'environmental var <%= ucPrefix %>_LOCAL_REPO_PATH not set'
+<% if db == "mysql" %>
 	[ -z "$__DB_SETUP_PASS__" ] &&
 	echo 'environmental var __DB_SETUP_PASS__ not set in keys'
 	[ -z "$<%= ucPrefix %>_DB_PASS_OWNER" ] &&
 	echo 'environmental var <%= ucPrefix %>_DB_PASS_OWNER not set in keys'
-
+<% end %>
 
 	#definitely problems if missing
 	[ -z "$<%= ucPrefix %>_REPO_URL" ] &&
@@ -490,11 +494,12 @@ deployment_server_env_check() (
 	echo 'environmental var <%= ucPrefix %>_AUTH_SECRET_KEY not set'
 	track_exit_code
 
-
+<% if db == "mysql" %>
 	#db
 	[ -z "$<%= ucPrefix %>_DB_PASS_API" ] &&
 	echo 'environmental var <%= ucPrefix %>_DB_PASS_API not set'
 	track_exit_code
+<% end %>
 	return "$fnExitCode"
 )
 
@@ -614,11 +619,11 @@ __get_remote_intermediate_key__() (
 	echo "/etc/ssl/certs/${<%= ucPrefix %>_PROJ_NAME}.intermediate.key.pem"
 )
 
+<% if apiLang == "python" %>
 replace_lib_files() (
 	process_global_vars "$@" &&
 	__replace_lib_files__
 )
-
 
 create_py_env_in_app_trunk() (
 	process_global_vars "$@" &&
@@ -722,6 +727,8 @@ copy_lib_to_test() (
 		"$(get_libs_dest_dir "$<%= ucPrefix %>_UTEST_ENV_DIR")"/"$<%= ucPrefix %>_LIB_NAME"
 )
 
+<% end %>
+
 unroot_dir() (
 	dirUnrootura="$1"
 	if [ ! -w "$dirUnrootura" ]; then
@@ -749,6 +756,7 @@ setup_env_api_file() (
 	perl -pi -e \
 		"s@^(<%= ucPrefix %>_SQL_SCRIPTS_DIR_CL=).*\$@\1'${<%= ucPrefix %>_SQL_SCRIPTS_DIR_CL}'@" \
 		"$envFile" &&
+<% if db == "mysql" %>
 	perl -pi -e \
 		"s@^(__DB_SETUP_PASS__=).*\$@\1'${__DB_SETUP_PASS__}'@" \
 		"$envFile" &&
@@ -758,12 +766,14 @@ setup_env_api_file() (
 	perl -pi -e \
 		"s@^(<%= ucPrefix %>_DB_PASS_API=).*\$@\1'${<%= ucPrefix %>_DB_PASS_API}'@" \
 		"$envFile" &&
+<% end %>
 	perl -pi -e \
 		"s@^(<%= ucPrefix %>_TEST_ROOT=).*\$@\1'${<%= ucPrefix %>_TEST_ROOT}'@" \
 		"$envFile" &&
 	echo 'done setting up .env file'
 )
 
+<% if db == "mysql" %>
 setup_db() (
 	echo 'setting up initial db'
 	process_global_vars "$@" &&
@@ -872,12 +882,14 @@ with DbRootConnectionService() as rootConnService:
 EOF
 	)
 )
+<% end %>
 
 sync_utility_scripts() (
 	process_global_vars "$@" &&
 	cp "$(get_repo_path)"/<%= lcPrefix %>_dev_ops_utilities.sh "$(__get_app_root__)"/<%= lcPrefix %>_dev_ops_utilities.sh
 )
 
+<% if apiLang == "python" %>
 #copy python dependency file to the deployment directory
 sync_requirement_list() (
 	process_global_vars "$@" &&
@@ -889,6 +901,7 @@ sync_requirement_list() (
 		"$(__get_app_root__)"/"$<%= ucPrefix %>_APP_TRUNK"/requirements.txt &&
 	cp "$(get_repo_path)"/requirements.txt "$(__get_app_root__)"/requirements.txt
 )
+<% end %>
 
 run_initial_install_script() (
 	process_global_vars "$@" &&
@@ -1236,6 +1249,7 @@ setup_ssl_cert_nginx() (
 	esac
 )
 
+<% if feLang == "react-ts" %>
 setup_react_env_debug() (
 	process_global_vars "$@" &&
 	envFile="$<%= ucPrefix %>_CLIENT_SRC"/.env.local
@@ -1249,6 +1263,7 @@ setup_react_env_debug() (
 	echo "VITE_SSL_PRIVATE=$(__get_debug_cert_path__).private.key.pem" \
 		>> "$envFile"
 )
+<% end %>
 
 get_nginx_value() (
 	key=${1:-'conf-path'}
@@ -1435,12 +1450,14 @@ setup_nginx_confs() (
 	echo 'done setting up nginx confs'
 )
 
+<% if apiLang == "python" %>
 show_current_py_lib_files() (
 	process_global_vars "$@" >/dev/null 2>&1 &&
 	set_python_version_const >/dev/null 2>&1 &&
 	envDir="lib/python${pyMajor}.${pyMinor}/site-packages/${<%= ucPrefix %>_LIB_NAME}"
 	echo "$(__get_app_root__)"/"$<%= ucPrefix %>_APP_TRUNK"/"$<%= ucPrefix %>_PY_ENV"/"$envDir"
 )
+<% end %>
 
 show_web_py_files() (
 	process_global_vars "$@" >/dev/null 2>&1 &&
@@ -1456,11 +1473,13 @@ __get_remote_export_script__() (
 	output="export expName='${expName}';"
 	output="${output} export PB_SECRET='$(__get_pb_secret__)';" &&
 	output="${output} export PB_API_KEY='$(__get_pb_api_key__)';" &&
+<% if db == "mysql" %>
 	output="${output} export <%= ucPrefix %>_AUTH_SECRET_KEY='$(__get_<%= lcPrefix %>_auth_key__)';" &&
 	output="${output} export <%= ucPrefix %>_DATABASE_NAME='<%= lcProjectName %>_db';" &&
 	output="${output} export __DB_SETUP_PASS__='$(__get_db_setup_key__)';" &&
 	output="${output} export <%= ucPrefix %>_DB_PASS_OWNER='$(__get_db_owner_key__)';" &&
 	output="${output} export <%= ucPrefix %>_DB_PASS_API='$(__get_api_db_user_key__)';" &&
+<% end %>
 	echo "$output"
 )
 
@@ -1469,6 +1488,7 @@ startup_api() (
 	if ! str_contains "$__SKIP__" "setup_api"; then
 		setup_api
 	fi &&
+<% if apiLang == "python" %>
 	. "$(__get_app_root__)"/"$<%= ucPrefix %>_APP_TRUNK"/"$<%= ucPrefix %>_PY_ENV"/bin/activate
 	errCode="$?"
 	# see #python_env
@@ -1481,6 +1501,7 @@ startup_api() (
 	--port "$<%= ucPrefix %>_API_PORT" \
 	"index:app" </dev/null >api.out 2>&1 &)
 	(exit "$errCode") &&
+<% end %>
 	echo "Server base is $(pwd). Look there for api.out and the log file"
 	echo "done starting up api. Access at ${<%= ucPrefix %>_FULL_URL}" ||
 	echo "failed while trying to start up api"
@@ -1496,13 +1517,16 @@ startup_nginx_for_debug() (
 setup_api() (
 	echo "setting up api"
 	process_global_vars "$@" &&
-	kill_process_using_port "$<%= ucPrefix %>_API_PORT" &&
 	sync_utility_scripts &&
+<% if apiLang == "python" %>
 	sync_requirement_list &&
 	copy_dir "$<%= ucPrefix %>_TEMPLATES_SRC" "$(__get_app_root__)"/"$<%= ucPrefix %>_TEMPLATES_DIR_CL" &&
 	copy_dir "$<%= ucPrefix %>_API_SRC" "$(get_web_root)"/"$<%= ucPrefix %>_APP_API_PATH_CL" &&
 	create_py_env_in_app_trunk &&
+<% end %>
+<% if db == "mysql" %>
 	setup_database &&
+<% end %>
 	setup_nginx_confs &&
 	echo "done setting up api"
 )
@@ -1526,6 +1550,7 @@ setup_client() (
 	process_global_vars "$@" &&
 	error_check_all_paths "$<%= ucPrefix %>_CLIENT_SRC" \
 		"$(get_web_root)"/"$<%= ucPrefix %>_APP_CLIENT_PATH_CL" &&
+<% if feLang == "react-ts" %>
 	#in theory, this should be sourced by .bashrc
 	#but sometimes there's an interactive check that ends the sourcing early
 	if [ -z "$NVM_DIR" ]; then
@@ -1548,6 +1573,7 @@ setup_client() (
 		cp -rv "$<%= ucPrefix %>_CLIENT_SRC"/build/. \
 			"$(get_web_root)"/"$<%= ucPrefix %>_APP_CLIENT_PATH_CL" &&
 	unroot_dir "$(get_web_root)"/"$<%= ucPrefix %>_APP_CLIENT_PATH_CL" &&
+<% end %>
 	echo "done setting up client"
 )
 
@@ -1582,6 +1608,7 @@ get_hash_of_file() (
 	cat "$file" | python3 -c "$pyScript"
 )
 
+<% if apiLang == "python" %>
 regen_file_reference_file() (
 	process_global_vars "$@" &&
 	outputFile="$<%= ucPrefix %>_LIB_SRC"/dtos_and_utilities/file_reference.py
@@ -1610,6 +1637,7 @@ regen_file_reference_file() (
 	printf '\tdef checksum(self) -> str:\n' >> "$outputFile"
 	printf '\t\treturn self.value[1]\n' >> "$outputFile"
 )
+<% end %>
 
 replace_sql_script() (
 	process_global_vars "$@" &&
@@ -1630,6 +1658,7 @@ setup_unit_test_env() (
 	__create_fake_keys_file__
 	setup_app_directories
 
+<% if apiLang == "python" %>
 	copy_dir "$<%= ucPrefix %>_TEMPLATES_SRC" "$(__get_app_root__)"/"$<%= ucPrefix %>_TEMPLATES_DIR_CL" &&
 	copy_dir "$<%= ucPrefix %>_SQL_SCRIPTS_SRC" \
 		"$(__get_app_root__)"/"$<%= ucPrefix %>_SQL_SCRIPTS_DIR_CL" &&
@@ -1650,6 +1679,7 @@ setup_unit_test_env() (
 	echo "$(__get_app_root__)"/"$<%= ucPrefix %>_CONFIG_DIR"/.env &&
 	echo "PYTHONPATH='${<%= ucPrefix %>_SRC_PATH}:${<%= ucPrefix %>_SRC_PATH}/api'" \
 		>> "$(__get_app_root__)"/"$<%= ucPrefix %>_CONFIG_DIR"/.env &&
+<% end %>
 	echo "done setting up test environment"
 )
 
@@ -1659,12 +1689,14 @@ run_unit_tests() (
 	process_global_vars "$@"
 	export __TEST_FLAG__='true'
 	setup_unit_test_env >/dev/null &&
+<% if apiLang == "python" %>
 	test_src="$<%= ucPrefix %>_SRC_PATH"/tests &&
 	export <%= ucPrefix %>_AUTH_SECRET_KEY=$(__get_<%= lcPrefix %>_auth_key__) &&
 	export PYTHONPATH="${<%= ucPrefix %>_SRC_PATH}:${<%= ucPrefix %>_SRC_PATH}/api" &&
 	. "$(__get_app_root__)"/"$<%= ucPrefix %>_APP_TRUNK"/"$<%= ucPrefix %>_PY_ENV"/bin/activate &&
 	cd "$test_src"
 	pytest -s "$@" &&
+<% end %>
 	echo "done running unit tests"
 )
 
@@ -1802,8 +1834,6 @@ define_app_root_terms() {
 }
 
 define_app_dir_paths() {
-
-
 	export <%= ucPrefix %>_CONFIG_DIR="$<%= ucPrefix %>_APP_TRUNK"/config
 	export <%= ucPrefix %>_DB_DIR="$<%= ucPrefix %>_APP_TRUNK"/db
 	export <%= ucPrefix %>_UTEST_ENV_DIR="$<%= ucPrefix %>_TEST_ROOT"/utest

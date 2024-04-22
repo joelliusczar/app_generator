@@ -1,4 +1,6 @@
 require 'fileutils'
+require 'erb'
+
 module AppGenUtils
 
 	def build_default_prefix(projectName)
@@ -13,10 +15,12 @@ module AppGenUtils
 		destDir = File.dirname(destFile)
 		FileUtils.mkdir_p(destDir)
 		templateContent = File.read("./template/#{srcFile}")
+		template = ERB.new(templateContent)
 		if replacements
-			replacements.each do |key, value|
-				templateContent.gsub!("<%= #{key} %>", value)
+			content = template.result_with_hash(replacements)
+		else
+			content = template.result
 		end
-		File.write(destFile, templateContent)
+		File.write(destFile, content)
 	end
 end

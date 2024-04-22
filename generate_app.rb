@@ -14,7 +14,7 @@ pythonConst = "python"
 reactTsConst = "react-ts"
 
 puts "Project Name?"
-appName = gets.chomp
+projectName = gets.chomp
 
 puts "Project Prefix?"
 prefix = gets.chomp
@@ -27,7 +27,7 @@ feLang = gets.chomp
 
 
 if prefix.strip.empty?
-	prefix = build_default_prefix(appName)
+	prefix = build_default_prefix(projectName)
 end
 
 if apiLang.strip.empty?
@@ -45,14 +45,24 @@ feLang = feLang.strip.downcase
 lcPrefix = prefix.downcase
 ucPrefix = prefix.upcase
 devOpsUtilitiesFile = "#{lcPrefix}_dev_ops_utilities"
-lcAppName = appName.downcase
+lcProjectName = projectName.downcase
+
+if apiLang == pythonConst
+	db = "mysql"
+else
+	db = ""
+end
 
 choices = {
 	devOpsUtilitiesFile: devOpsUtilitiesFile,
-	projectName: appName,
-	lcProjectName: lcAppName,
+	projectName: projectName,
+	lcProjectName: lcProjectName,
 	ucPrefix: ucPrefix,
 	lcPrefix: lcPrefix,
+	title: projectName,
+	apiLang: apiLang,
+	feLang: feLang,
+	db: db
 }
 
 if File.exists?("./output")
@@ -62,18 +72,13 @@ end
 copy_tpl(
 	"gitignore", 
 	".gitignore", 
-	{ projectName: appName }
+	choices
 )
 
 copy_tpl(
 	"dev_ops_utilities.sh", 
 	"#{devOpsUtilitiesFile}.sh", 
-	{
-		projectName: appName,
-		lcProjectName: lcAppName,
-		ucPrefix: ucPrefix,
-		lcPrefix: lcPrefix,
-	}
+	choices
 )
 
 
@@ -81,66 +86,45 @@ copy_tpl(
 copy_tpl(
 	"deploy_to_server.sh",
 	"deploy_to_server.sh",
-	{
-		devOpsUtilitiesFile: devOpsUtilitiesFile,
-		projectName: appName,
-		ucPrefix: ucPrefix,
-		lcPrefix: lcPrefix
-	}
+	choices
 )
 
 copy_tpl(
 	".vscode/launch.json",
 	".vscode/launch.json",
-	{
-		projectName: appName,
-		ucPrefix: ucPrefix,
-		lcPrefix: lcPrefix
-	}
+	choices
 )
 
 copy_tpl(
 	".vscode/settings.json",
 	".vscode/settings.json",
-	{
-		projectName: appName,
-		ucPrefix: ucPrefix,
-		lcPrefix: lcPrefix
-	}
+	choices
 )
 
 copy_tpl(
 	".vscode/tasks.json",
 	".vscode/tasks.json",
-	{
-		devOpsUtilitiesFile: devOpsUtilitiesFile
-	}
+	choices
 )
 
 copy_tpl(
 	"install_script.sh",
 	"install_script.sh",
-	{
-		devOpsUtilitiesFile: devOpsUtilitiesFile,
-		ucPrefix: ucPrefix,
-		lcPrefix: lcPrefix
-	}
+	choices
 )
 
 if apiLang == pythonConst
-	generate_python_api(appName, ucPrefix, lcPrefix, devOpsUtilitiesFile)
+	generate_python_api(choices)
 end
 
 if feLang == reactTsConst
-	generate_react_ts(appName, ucPrefix, lcPrefix, devOpsUtilitiesFile)
+	generate_react_ts(choices)
 end
 
 copy_tpl(
 	"templates/env_api",
 	"templates/.env_api",
-	{
-		ucPrefix: ucPrefix
-	}
+	choices
 )
 
 copy_tpl(
@@ -151,17 +135,13 @@ copy_tpl(
 copy_tpl(
 	"templates/nginx_template.conf",
 	"templates/nginx_template.conf",
-	{
-		ucPrefix: ucPrefix
-	}
+	choices
 )
 
 copy_tpl(
 	"templates/nginx_template.conf",
 	"templates/nginx_template.conf",
-	{
-		ucPrefix: ucPrefix
-	}
+	choices
 )
 
 

@@ -3,10 +3,12 @@ require_relative "generate_app_util"
 include AppGenUtils
 
 module AppGenPythons
-	def generate_python_api(appName, ucPrefix, lcPrefix, devOpsUtilitiesFile)
+	def generate_python_api(choices)
+
+		projectName = choices["projectName"]
 
 		srcDtosAndUtilitiesDir = 'src/libs/dtos_and_utilities'
-		destDtosAndUtilitiesDir = "src/#{appName}_libs/dtos_and_utilities"
+		destDtosAndUtilitiesDir = "src/#{projectName}_libs/dtos_and_utilities"
 
 		copy_tpl(
 			"#{srcDtosAndUtilitiesDir}/type_aliases.py", 
@@ -16,9 +18,7 @@ module AppGenPythons
 		copy_tpl(
 			"#{srcDtosAndUtilitiesDir}/generic_dtos.py",
 			"#{destDtosAndUtilitiesDir}/generic_dtos.py",
-			{
-				ucPrefix: ucPrefix
-			}
+			choices
 		)
 
 		copy_tpl(
@@ -49,27 +49,19 @@ module AppGenPythons
 		copy_tpl(
 			"#{srcDtosAndUtilitiesDir}/db_helpers.py",
 			"#{destDtosAndUtilitiesDir}/db_helpers.py",
-			{
-				projectName: appName,
-				lcPrefix: lcPrefix
-			}
+			choices
 		)
 
 		copy_tpl(
 			"#{srcDtosAndUtilitiesDir}/errors.py",
 			"#{destDtosAndUtilitiesDir}/errors.py",
-			{
-				ucPrefix: ucPrefix
-			}
+			choices
 		)
 
 		copy_tpl(
 			"#{srcDtosAndUtilitiesDir}/logging.py",
 			"#{destDtosAndUtilitiesDir}/logging.py",
-			{
-				projectName: appName,
-				lcPrefix: lcPrefix
-			}
+			choices
 		)
 
 		copy_tpl(
@@ -80,9 +72,7 @@ module AppGenPythons
 		copy_tpl(
 			"#{srcDtosAndUtilitiesDir}/file_reference.py",
 			"#{destDtosAndUtilitiesDir}/file_reference.py",
-			{
-				devOpsUtilitiesFile: devOpsUtilitiesFile
-			}
+			choices
 		)
 
 		copy_tpl(
@@ -92,64 +82,51 @@ module AppGenPythons
 
 		copy_tpl(
 			"src/libs/dev/ssl/installed_certs/__main__.py",
-			"src/#{appName}_libs/dev/ssl/installed_certs/__main__.py"
+			"src/#{projectName}_libs/dev/ssl/installed_certs/__main__.py"
 		)
 
 		copy_tpl(
 			"src/libs/tables.py",
-			"src/#{appName}_libs/tables.py"
+			"src/#{projectName}_libs/tables.py"
 		)
 
 		srcServicesDir = "src/libs/services"
-		destServicesDir = "src/#{appName}_libs/services"
+		destServicesDir = "src/#{projectName}_libs/services"
 
 		copy_tpl(
 			"#{srcServicesDir}/env_manager.py",
 			"#{destServicesDir}/env_manager.py",
-			{
-				projectName: appName,
-				ucPrefix: ucPrefix
-			}
+			choices
 		)
 
 		copy_tpl(
 			"#{srcServicesDir}/db_setup_service.py",
 			"#{destServicesDir}/db_setup_service.py",
-			{
-				projectName: appName
-			}
+			choices
 		)
 
 		copy_tpl(
 			"#{srcServicesDir}/process_service.py",
 			"#{destServicesDir}/process_service.py",
-			{
-				projectName: appName
-			}
+			choices
 		)
 
 		copy_tpl(
 			"#{srcServicesDir}/template_service.py",
 			"#{destServicesDir}/template_service.py",
-			{
-				projectName: appName
-			}
+			choices
 		)
 
 		copy_tpl(
 			"#{srcServicesDir}/accounts_service.py",
 			"#{destServicesDir}/accounts_service.py",
-			{
-				projectName: appName
-			}
+			choices
 		)
 
 		copy_tpl(
 			"#{srcServicesDir}/user_actions_history_service.py",
 			"#{destServicesDir}/user_actions_history_service.py",
-			{
-				projectName: appName
-			}
+			choices
 		)
 
 		copy_tpl(
@@ -159,54 +136,42 @@ module AppGenPythons
 
 		copy_tpl(
 			"src/libs/__init__.py",
-			"src/#{appName}_libs/__init__.py")
+			"src/#{projectName}_libs/__init__.py")
 
 		copy_tpl(
 			"src/api/api_error.py", 
 			"src/api/api_error.py",
-			{
-				projectName: appName
-			}
+			choices
 		)
 
 		copy_tpl(
 			"src/api/api_dependencies.py", 
 			"src/api/api_dependencies.py",
-			{
-				projectName: appName
-			}
+			choices
 		)
 
 		copy_tpl(
 			"src/api/accounts_controller.py", 
 			"src/api/accounts_controller.py",
-			{
-				projectName: appName
-			}
+			choices
 		)
 
 		copy_tpl(
 			"src/api/index.py", 
 			"src/api/index.py",
-			{
-				projectName: appName
-			}
+			choices
 		)
 
 		copy_tpl(
 			"src/api/accounts_controller.py", 
 			"src/api/accounts_controller.py",
-			{
-				projectName: appName
-			}
+			choices
 		)
 
 		copy_tpl(
 			"src/api/api_dependencies.py", 
 			"src/api/api_dependencies.py",
-			{
-				projectName: appName
-			}
+			choices
 		)
 
 
@@ -218,19 +183,19 @@ module AppGenPythons
 		copy_tpl(
 			"src/tests/mocks/constant_values_defs.py", 
 			"src/tests/mocks/constant_values_defs.py",
-			{ projectName: appName }
+			choices
 		)
 		
 		copy_tpl(
 			"src/tests/mocks/db_data.py", 
 			"src/tests/mocks/db_data.py",
-			{ projectName: appName }
+			choices
 		)
 		
 		copy_tpl(
 			"src/tests/mocks/db_population.py", 
 			"src/tests/mocks/db_population.py",
-			{ projectName: appName }
+			choices
 		)
 		
 		copy_tpl(
@@ -240,7 +205,7 @@ module AppGenPythons
 		copy_tpl(
 			"src/tests/mocks/mock_db_constructors.py", 
 			"src/tests/mocks/mock_db_constructors.py",
-			{ projectName: appName }
+			choices
 		)
 		
 		copy_tpl(
@@ -261,13 +226,13 @@ module AppGenPythons
 		copy_tpl(
 			"src/tests/common_fixtures.py",
 			"src/tests/common_fixtures.py",
-			{ projectName: appName }
+			choices
 		)
 		
 		copy_tpl(
 			"src/tests/constant_fixtures_for_test.py",
 			"src/tests/constant_fixtures_for_test.py",
-			{ projectName: appName }
+			choices
 		)
 		
 		copy_tpl(
@@ -278,19 +243,19 @@ module AppGenPythons
 		copy_tpl(
 			"src/tests/test_account_service.py", 
 			"src/tests/test_account_service.py",
-			{ projectName: appName }
+			choices
 		)
 		
 		copy_tpl(
 			"src/tests/test_accounts_controller.py", 
 			"src/tests/test_accounts_controller.py",
-			{ projectName: appName }
+			choices
 		)
 		
 		copy_tpl(
 			"src/tests/test_dtos.py",
 			"src/tests/test_dtos.py",
-			{ projectName: appName }
+			choices
 		)
 		
 		copy_tpl(
@@ -298,8 +263,10 @@ module AppGenPythons
 			"src/tests/test_fast_api.py"
 		)
 		
-		copy_tpl("src/tests/test_in_mem_db.py", "src/tests/test_in_mem_db.py",
-			{ projectName: appName }
+		copy_tpl(
+			"src/tests/test_in_mem_db.py",
+			"src/tests/test_in_mem_db.py",
+			choices
 		)
 		
 		copy_tpl(
@@ -307,12 +274,16 @@ module AppGenPythons
 			"src/tests/test_python.py"
 		)
 		
-		copy_tpl("src/tests/test_simple_functions.py", "src/tests/test_simple_functions.py",
-			{ projectName: appName }
+		copy_tpl(
+			"src/tests/test_simple_functions.py",
+			"src/tests/test_simple_functions.py",
+			choices
 		)
 		
-		copy_tpl("src/tests/test_test_env.py", "src/tests/test_test_env.py",
-			{ projectName: appName }
+		copy_tpl(
+			"src/tests/test_test_env.py",
+			"src/tests/test_test_env.py",
+			choices
 		)
 		
 		copy_tpl(
