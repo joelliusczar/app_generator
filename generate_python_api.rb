@@ -5,9 +5,12 @@ include AppGenUtils
 module AppGenPythons
 	def generate_python_api(choices)
 
-		projectName = choices["projectName"]
+		projectName = choices[:projectName]
+		fromLibs = "libs_python"
+		fromApi = "api_python"
+		fromTests = "tests_python"
 
-		srcDtosAndUtilitiesDir = 'src/libs/dtos_and_utilities'
+		srcDtosAndUtilitiesDir = "src/#{fromLibs}/dtos_and_utilities"
 		destDtosAndUtilitiesDir = "src/#{projectName}_libs/dtos_and_utilities"
 
 		copy_tpl(
@@ -81,16 +84,16 @@ module AppGenPythons
 		)
 
 		copy_tpl(
-			"src/libs/dev/ssl/installed_certs/__main__.py",
+			"src/#{fromLibs}/dev/ssl/installed_certs/__main__.py",
 			"src/#{projectName}_libs/dev/ssl/installed_certs/__main__.py"
 		)
 
 		copy_tpl(
-			"src/libs/tables.py",
+			"src/#{fromLibs}/tables.py",
 			"src/#{projectName}_libs/tables.py"
 		)
 
-		srcServicesDir = "src/libs/services"
+		srcServicesDir = "src/#{fromLibs}/services"
 		destServicesDir = "src/#{projectName}_libs/services"
 
 		copy_tpl(
@@ -135,159 +138,161 @@ module AppGenPythons
 		)
 
 		copy_tpl(
-			"src/libs/__init__.py",
-			"src/#{projectName}_libs/__init__.py")
+			"src/#{fromLibs}/__init__.py",
+			"src/#{projectName}_libs/__init__.py"
+		)
 
+		
 		copy_tpl(
-			"src/api/api_error.py", 
+			"src/#{fromApi}/api_error.py", 
 			"src/api/api_error.py",
 			choices
 		)
 
 		copy_tpl(
-			"src/api/api_dependencies.py", 
+			"src/#{fromApi}/api_dependencies.py", 
 			"src/api/api_dependencies.py",
 			choices
 		)
 
 		copy_tpl(
-			"src/api/accounts_controller.py", 
+			"src/#{fromApi}/accounts_controller.py", 
 			"src/api/accounts_controller.py",
 			choices
 		)
 
 		copy_tpl(
-			"src/api/index.py", 
+			"src/#{fromApi}/index.py", 
 			"src/api/index.py",
 			choices
 		)
 
 		copy_tpl(
-			"src/api/accounts_controller.py", 
+			"src/#{fromApi}/accounts_controller.py", 
 			"src/api/accounts_controller.py",
 			choices
 		)
 
 		copy_tpl(
-			"src/api/api_dependencies.py", 
+			"src/#{fromApi}/api_dependencies.py", 
 			"src/api/api_dependencies.py",
 			choices
 		)
 
 
 		copy_tpl(
-			"src/tests/mocks/__init__.py",
+			"src/#{fromTests}/mocks/__init__.py",
 			"src/tests/mocks/__init__.py"
 		)
 		
 		copy_tpl(
-			"src/tests/mocks/constant_values_defs.py", 
+			"src/#{fromTests}/mocks/constant_values_defs.py", 
 			"src/tests/mocks/constant_values_defs.py",
 			choices
 		)
 		
 		copy_tpl(
-			"src/tests/mocks/db_data.py", 
+			"src/#{fromTests}/mocks/db_data.py", 
 			"src/tests/mocks/db_data.py",
 			choices
 		)
 		
 		copy_tpl(
-			"src/tests/mocks/db_population.py", 
+			"src/#{fromTests}/mocks/db_population.py", 
 			"src/tests/mocks/db_population.py",
 			choices
 		)
 		
 		copy_tpl(
-			"src/tests/mocks/mock_datetime_provider.py",
+			"src/#{fromTests}/mocks/mock_datetime_provider.py",
 			"src/tests/mocks/mock_datetime_provider.py")
 		
 		copy_tpl(
-			"src/tests/mocks/mock_db_constructors.py", 
+			"src/#{fromTests}/mocks/mock_db_constructors.py", 
 			"src/tests/mocks/mock_db_constructors.py",
 			choices
 		)
 		
 		copy_tpl(
-			"src/tests/mocks/special_strings_reference.py",
+			"src/#{fromTests}/mocks/special_strings_reference.py",
 			"src/tests/mocks/special_strings_reference.py"
 		)
 		
 		copy_tpl(
-			"src/tests/__init__.py",
+			"src/#{fromTests}/__init__.py",
 			"src/tests/__init__.py"
 		)
 		
 		copy_tpl(
-			"src/tests/api_test_dependencies.py",
+			"src/#{fromTests}/api_test_dependencies.py",
 			"src/tests/api_test_dependencies.py"
 		)
 		
 		copy_tpl(
-			"src/tests/common_fixtures.py",
+			"src/#{fromTests}/common_fixtures.py",
 			"src/tests/common_fixtures.py",
 			choices
 		)
 		
 		copy_tpl(
-			"src/tests/constant_fixtures_for_test.py",
+			"src/#{fromTests}/constant_fixtures_for_test.py",
 			"src/tests/constant_fixtures_for_test.py",
 			choices
 		)
 		
 		copy_tpl(
-			"src/tests/helpers.py",
+			"src/#{fromTests}/helpers.py",
 			"src/tests/helpers.py"
 		)
 		
 		copy_tpl(
-			"src/tests/test_account_service.py", 
+			"src/#{fromTests}/test_account_service.py", 
 			"src/tests/test_account_service.py",
 			choices
 		)
 		
 		copy_tpl(
-			"src/tests/test_accounts_controller.py", 
+			"src/#{fromTests}/test_accounts_controller.py", 
 			"src/tests/test_accounts_controller.py",
 			choices
 		)
 		
 		copy_tpl(
-			"src/tests/test_dtos.py",
+			"src/#{fromTests}/test_dtos.py",
 			"src/tests/test_dtos.py",
 			choices
 		)
 		
 		copy_tpl(
-			"src/tests/test_fast_api.py",
+			"src/#{fromTests}/test_fast_api.py",
 			"src/tests/test_fast_api.py"
 		)
 		
 		copy_tpl(
-			"src/tests/test_in_mem_db.py",
+			"src/#{fromTests}/test_in_mem_db.py",
 			"src/tests/test_in_mem_db.py",
 			choices
 		)
 		
 		copy_tpl(
-			"src/tests/test_python.py",
+			"src/#{fromTests}/test_python.py",
 			"src/tests/test_python.py"
 		)
 		
 		copy_tpl(
-			"src/tests/test_simple_functions.py",
+			"src/#{fromTests}/test_simple_functions.py",
 			"src/tests/test_simple_functions.py",
 			choices
 		)
 		
 		copy_tpl(
-			"src/tests/test_test_env.py",
+			"src/#{fromTests}/test_test_env.py",
 			"src/tests/test_test_env.py",
 			choices
 		)
 		
 		copy_tpl(
-			"src/tests/pytest.ini",
+			"src/#{fromTests}/pytest.ini",
 			"src/tests/pytest.ini"
 		)
 

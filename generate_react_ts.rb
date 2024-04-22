@@ -139,7 +139,7 @@ module AppGenReactTs
 		)
 		
 		copy_tpl(
-			"src/client/2src/Components/Shared/UrlPagination.tsx",
+			"src/#{fromClient}/src/Components/Shared/UrlPagination.tsx",
 			"src/client/src/Components/Shared/UrlPagination.tsx"
 		)
 		
