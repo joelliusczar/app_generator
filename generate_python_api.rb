@@ -3,7 +3,7 @@ require_relative "generate_app_util"
 include AppGenUtils
 
 module AppGenPythons
-	def generate_python_api(choices)
+	def self.generate(choices)
 
 		projectName = choices[:projectName]
 		fromLibs = "python/libs"

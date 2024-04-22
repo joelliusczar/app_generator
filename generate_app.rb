@@ -2,11 +2,11 @@ require 'fileutils'
 require_relative "generate_app_util"
 require_relative "generate_python_api"
 require_relative "generate_react_ts"
+require_relative "generate_no_framework"
 
 
 include AppGenUtils
-include AppGenPythons
-include AppGenReactTs
+
 
 
 
@@ -82,7 +82,6 @@ copy_tpl(
 )
 
 
-
 copy_tpl(
 	"deploy_to_server.sh",
 	"deploy_to_server.sh",
@@ -114,11 +113,13 @@ copy_tpl(
 )
 
 if apiLang == pythonConst
-	generate_python_api(choices)
+	AppGenPythons::generate(choices)
 end
 
 if feLang == reactTsConst
-	generate_react_ts(choices)
+	AppGenReactTs::generate(choices)
+else
+	AppGenNoFramework::generate(choices)
 end
 
 copy_tpl(

@@ -3,7 +3,7 @@ require_relative "generate_app_util"
 include AppGenUtils
 
 module AppGenReactTs
-	def generate_react_ts(choices)
+	def self.generate(choices)
 
 		fromClient = "react_ts/client"
 		copy_tpl(
