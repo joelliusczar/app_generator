@@ -5,7 +5,7 @@ include AppGenUtils
 module AppGenReactTs
 	def generate_react_ts(choices)
 
-		fromClient = "client_react_ts"
+		fromClient = "react_ts/client"
 		copy_tpl(
 			"src/#{fromClient}/eslintrc.js",
 			"src/client/.eslintrc.js"

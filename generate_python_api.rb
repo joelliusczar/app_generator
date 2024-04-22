@@ -6,9 +6,9 @@ module AppGenPythons
 	def generate_python_api(choices)
 
 		projectName = choices[:projectName]
-		fromLibs = "libs_python"
-		fromApi = "api_python"
-		fromTests = "tests_python"
+		fromLibs = "python/libs"
+		fromApi = "python/api"
+		fromTests = "python/tests"
 
 		srcDtosAndUtilitiesDir = "src/#{fromLibs}/dtos_and_utilities"
 		destDtosAndUtilitiesDir = "src/#{projectName}_libs/dtos_and_utilities"
