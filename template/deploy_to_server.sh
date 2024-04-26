@@ -1,17 +1,17 @@
 #!/bin/sh
 
-if [ -e ./<%= devOpsUtilitiesFile %>.sh ]; then
-	devOpsUtilitiesPath='./<%= devOpsUtilitiesFile %>.sh'
-elif [ -e ../<%= devOpsUtilitiesFile %>.sh ]; then
-	devOpsUtilitiesPath='../<%= devOpsUtilitiesFile %>.sh'
+if [ -e ./<%= devOpsFile %>.sh ]; then
+	devOpsPath='./<%= devOpsFile %>.sh'
+elif [ -e ../<%= devOpsFile %>.sh ]; then
+	devOpsPath='../<%= devOpsFile %>.sh'
 else
-  echo "<%= devOpsUtilitiesFile %>.sh not found"
+  echo "<%= devOpsFile %>.sh not found"
   exit 1
 fi
 
 #this is included locally. Any changes here are not going to be on the server
 #unless they've been pushed to the repo
-. "$devOpsUtilitiesPath"
+. "$devOpsPath"
 
 
 process_global_vars "$@" ||
@@ -114,26 +114,26 @@ RemoteScriptEOF1
 
 if is_ssh; then
 	sync_utility_scripts
-	echo '<%= devOpsUtilitiesFile %> hash:'
-	get_hash_of_file './<%= devOpsUtilitiesFile %>.sh'
+	echo '<%= devOpsFile %> hash:'
+	get_hash_of_file './<%= devOpsFile %>.sh'
 	if [ "$__SETUP_LVL__" = 'api' ]; then
 		echo "$__SETUP_LVL__"
 		(exit "$unitTestSuccess") &&
-		. ./<%= devOpsUtilitiesFile %>.sh &&
+		. ./<%= devOpsFile %>.sh &&
 		startup_api
 	elif [ "$__SETUP_LVL__" = 'client' ]; then
 		echo "$__SETUP_LVL__"
-		. ./<%= devOpsUtilitiesFile %>.sh &&
+		. ./<%= devOpsFile %>.sh &&
 		setup_client &&
 		echo "finished setup"
 	elif [ "$__SETUP_LVL__" = 'install' ]; then
 		echo "$__SETUP_LVL__"
-		. ./<%= devOpsUtilitiesFile %>.sh &&
+		. ./<%= devOpsFile %>.sh &&
 		run_initial_install_script
 		echo "finished setup"
 	else
 		echo "$__SETUP_LVL__"
-		. ./<%= devOpsUtilitiesFile %>.sh &&
+		. ./<%= devOpsFile %>.sh &&
 		sync_utility_scripts &&
 		echo "finished setup"
 	fi
@@ -154,7 +154,7 @@ RemoteScriptEOF3
 
 {
 	cat<<RemoteScriptEOF4
-$(cat "$devOpsUtilitiesPath")
+$(cat "$devOpsPath")
 scope() (
 
 	<%= ucPrefix %>_REPO_URL="$<%= ucPrefix %>_REPO_URL"
@@ -181,7 +181,7 @@ ssh -i $(__get_id_file__) "root@$(__get_address__)" \
 echo "All done" || echo "Onk!"
 
 rm -f env_var_fifo remote_script_fifo remote_cleanup_fifo
-rm -f <%= devOpsUtilitiesFile %>_fifo clone_repo_fifo script_select_fifo
+rm -f <%= devOpsFile %>_fifo clone_repo_fifo script_select_fifo
 
 
 

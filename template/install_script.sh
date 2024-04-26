@@ -1,11 +1,11 @@
 #!/bin/sh
 echo "top of install script"
-if [ -e ./<%= devOpsUtilitiesFile %>.sh ]; then
-	. ./<%= devOpsUtilitiesFile %>.sh
-elif [ -e ../<%= devOpsUtilitiesFile %>.sh ]; then
-	. ../<%= devOpsUtilitiesFile %>.sh
+if [ -e ./<%= devOpsFile %>.sh ]; then
+	. ./<%= devOpsFile %>.sh
+elif [ -e ../<%= devOpsFile %>.sh ]; then
+	. ../<%= devOpsFile %>.sh
 else
-  echo "<%= devOpsUtilitiesFile %>.sh not found"
+  echo "<%= devOpsFile %>.sh not found"
   exit 1
 fi
 

@@ -1,6 +1,6 @@
 ####### This file is generated. #######
 # edit regen_file_reference_file #
-# in <%= devOpsUtilitiesFile %>.sh and rerun
+# in <%= devOpsFile %>.sh and rerun
 from enum import Enum
 
 class SqlScripts(Enum):

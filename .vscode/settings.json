@@ -1,0 +1,11 @@
+{
+  "editor.tabSize": 2,
+  "editor.rulers": [80, 120],
+  "workbench.colorCustomizations": {
+    "editorRuler.foreground": "#ef40ff"
+  },
+  "search.exclude": {
+    "**/test_trash": true
+  },
+  "editor.insertSpaces": false,
+}

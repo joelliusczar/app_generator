@@ -39,7 +39,7 @@
     "start": "vite",
     "build": "tsc && vite build",
     "build:test": "env-cmd -f ./.env.local run-scripts build",
-    "setVars": ". ../../<%= devOpsUtilitiesFile %>.sh && setup_react_env_debug",
+    "setVars": ". ../../<%= devOpsFile %>.sh && setup_react_env_debug",
     "serve": "vite preview"
   },
   "eslintConfig": {

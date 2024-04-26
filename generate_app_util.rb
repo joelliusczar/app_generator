@@ -15,7 +15,7 @@ module AppGenUtils
 		destDir = File.dirname(destFile)
 		FileUtils.mkdir_p(destDir)
 		templateContent = File.read("./template/#{srcFile}")
-		template = ERB.new(templateContent)
+		template = ERB.new(templateContent, trim_mode:"<>")
 		if replacements
 			content = template.result_with_hash(replacements)
 		else

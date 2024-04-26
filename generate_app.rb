@@ -44,7 +44,7 @@ feLang = feLang.strip.downcase
 
 lcPrefix = prefix.downcase
 ucPrefix = prefix.upcase
-devOpsUtilitiesFile = "#{lcPrefix}_dev_ops"
+devOpsFile = "#{lcPrefix}_dev_ops"
 lcProjectName = projectName.downcase
 
 if apiLang == pythonConst
@@ -54,7 +54,7 @@ else
 end
 
 choices = {
-	devOpsUtilitiesFile: devOpsUtilitiesFile,
+	devOpsFile: devOpsFile,
 	projectName: projectName,
 	lcProjectName: lcProjectName,
 	ucPrefix: ucPrefix,
@@ -77,7 +77,7 @@ copy_tpl(
 
 copy_tpl(
 	"dev_ops.sh", 
-	"#{devOpsUtilitiesFile}.sh", 
+	"#{devOpsFile}.sh", 
 	choices
 )
 
