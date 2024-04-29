@@ -63,6 +63,7 @@ ucPrefix = prefix.upcase
 devOpsFile = "#{lcPrefix}_dev_ops"
 projectNameLc = projectName.downcase
 projectNameSnake = to_snake(projectName)
+projectNameFlat = to_flat(projectName)
 
 if apiLang == pythonConst
 	db = "mysql"
@@ -75,7 +76,7 @@ choices = {
 	projectName: projectName,
 	projectNameLc: projectNameLc,
 	projectNameSnake: projectNameSnake,
-	projectNameFlat: to_flat(projectName),
+	projectNameFlat: projectNameFlat,
 	ucPrefix: ucPrefix,
 	lcPrefix: lcPrefix,
 	title: projectName,

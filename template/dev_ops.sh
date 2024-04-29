@@ -1867,7 +1867,7 @@ setup_unit_test_env() (
 	echo 'setting up test environment'
 	process_global_args "$@" || return
 
-	define_global_vars &&
+	define_consts &&
 	define_directory_vars &&
 	export __TEST_FLAG__='true'
 	publicKeyFile=$(__get_debug_cert_path__).public.key.crt
@@ -2032,6 +2032,28 @@ define_consts() {
 	export <%= ucPrefix %>_API_PORT='8033'
 	#python environment names
 	export <%= ucPrefix %>_PY_ENV='<%= lcPrefix %>_env'
+
+	export <%= ucPrefix %>_APP_ROOT=${<%= ucPrefix %>_APP_ROOT:-"$HOME"}
+	export <%= ucPrefix %>_TRUNK="$<%= ucPrefix %>_PROJ_NAME_SNAKE"
+	export <%= ucPrefix %>_LIB="$<%= ucPrefix %>_PROJ_NAME_SNAKE"
+	export <%= ucPrefix %>_DEV_OPS_LIB="$<%= ucPrefix %>_PROJ_NAME_SNAKE"_dev_ops
+	export <%= ucPrefix %>_APP="$<%= ucPrefix %>_PROJ_NAME_SNAKE"
+
+	export <%= ucPrefix %>_CONFIG_DIR="$<%= ucPrefix %>_TRUNK"/config
+	export <%= ucPrefix %>_DB_DIR="$<%= ucPrefix %>_TRUNK"/db
+	export <%= ucPrefix %>_UTEST_ENV_DIR="$<%= ucPrefix %>_TEST_ROOT"/utest
+
+	# directories that should be cleaned upon changes
+	# suffixed with DEST
+	export <%= ucPrefix %>_TEMPLATES_DEST="$<%= ucPrefix %>_TRUNK"/templates
+	export <%= ucPrefix %>_SQL_SCRIPTS_DEST="$<%= ucPrefix %>_TRUNK"/sql_scripts
+	export <%= ucPrefix %>_API_DEST=api/"$<%= ucPrefix %>"
+	export <%= ucPrefix %>_CLIENT_DEST=client/"$<%= ucPrefix %>"
+
+
+	export <%= ucPrefix %>_SERVER_NAME=$(__get_domain_name__ "$<%= ucPrefix %>_ENV")
+	export <%= ucPrefix %>_FULL_URL="https://${<%= ucPrefix %>_SERVER_NAME}"
+
 	export __<%= ucPrefix %>_CONSTANTS_SET__='true'
 	echo "constants defined"
 }
@@ -2046,34 +2068,6 @@ create_install_directory() {
 	[ -d "$<%= ucPrefix %>_LOCAL_REPO_DIR" ] ||
 	mkdir -pv "$<%= ucPrefix %>_LOCAL_REPO_DIR"
 }
-
-
-define_app_root_terms() {
-	export <%= ucPrefix %>_APP_ROOT=${<%= ucPrefix %>_APP_ROOT:-"$HOME"}
-
-	export <%= ucPrefix %>_TRUNK="$<%= ucPrefix %>_PROJ_NAME_SNAKE"
-	export <%= ucPrefix %>_LIB="$<%= ucPrefix %>_PROJ_NAME_SNAKE"
-	export <%= ucPrefix %>_DEV_OPS_LIB="$<%= ucPrefix %>_PROJ_NAME_SNAKE"_dev_ops
-	export <%= ucPrefix %>_APP="$<%= ucPrefix %>_PROJ_NAME_SNAKE"
-	echo "top level terms defined"
-}
-
-
-define_app_dir_paths() {
-	export <%= ucPrefix %>_CONFIG_DIR="$<%= ucPrefix %>_TRUNK"/config
-	export <%= ucPrefix %>_DB_DIR="$<%= ucPrefix %>_TRUNK"/db
-	export <%= ucPrefix %>_UTEST_ENV_DIR="$<%= ucPrefix %>_TEST_ROOT"/utest
-
-	# directories that should be cleaned upon changes
-	# suffixed with DEST
-	export <%= ucPrefix %>_TEMPLATES_DEST="$<%= ucPrefix %>_TRUNK"/templates
-	export <%= ucPrefix %>_SQL_SCRIPTS_DEST="$<%= ucPrefix %>_TRUNK"/sql_scripts
-	export <%= ucPrefix %>_API_DEST=api/"$<%= ucPrefix %>"
-	export <%= ucPrefix %>_CLIENT_DEST=client/"$<%= ucPrefix %>"
-
-	echo "app dir paths defined and created"
-}
-
 
 __get_url_base__() (
 	echo '<%= projectNameFlat %>'
@@ -2104,13 +2098,6 @@ __get_domain_name__() (
 	echo "${urlBase}${urlSuffix}"
 )
 
-
-__define_url__() {
-	echo "env: ${<%= ucPrefix %>_ENV}"
-	export <%= ucPrefix %>_SERVER_NAME=$(__get_domain_name__ "$<%= ucPrefix %>_ENV")
-	export <%= ucPrefix %>_FULL_URL="https://${<%= ucPrefix %>_SERVER_NAME}"
-	echo "url defined"
-}
 
 
 define_repo_paths() {
@@ -2156,14 +2143,6 @@ setup_base_dirs() {
 }
 
 
-define_global_vars() {
-	define_consts &&
-	define_app_root_terms &&
-	define_app_dir_paths &&
-	__define_url__
-}
-
-
 define_directory_vars() {
 	[ -z "$__DIRECTORY_VARS_SET__" ] || return 0
 	export <%= ucPrefix %>_LOCAL_REPO_DIR=$(get_repo_path) &&
@@ -2176,7 +2155,7 @@ process_global_vars() {
 	process_global_args "$@" || return
 	[ -z "$__GLOBALS_SET__" ] || return 0
 
-	define_global_vars &&
+	define_consts &&
 	define_directory_vars &&
 	setup_base_dirs &&
 

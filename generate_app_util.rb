@@ -30,7 +30,7 @@ module AppGenUtils
 	end
 
 	def to_flat(projectName)
-		projectName.delete("^a-zA-Z0-9")
+		projectName.delete("^a-zA-Z0-9_\-").downcase
 	end
 
 	def copy_tpl(srcFile, destFile, replacements = nil)
