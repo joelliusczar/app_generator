@@ -2118,7 +2118,7 @@ define_repo_paths() {
 	export <%= ucPrefix %>_API_SRC="$<%= ucPrefix %>_SRC/api"
 	export <%= ucPrefix %>_CLIENT_SRC="$<%= ucPrefix %>_SRC/client"
 	export <%= ucPrefix %>_LIB_SRC="$<%= ucPrefix %>_SRC/$<%= ucPrefix %>_LIB"
-	export <%= ucPrefix %>_DEV_OPS_LIB_SRC="$<%= ucPrefix %>_SRC/$<%= ucPrefix %><%= ucPrefix %>_DEV_OPS_LIB"
+	export <%= ucPrefix %>_DEV_OPS_LIB_SRC="$<%= ucPrefix %>_SRC/$<%= ucPrefix %>_DEV_OPS_LIB"
 	export <%= ucPrefix %>_TEMPLATES_SRC="$(get_repo_path)/templates"
 	export <%= ucPrefix %>_SQL_SCRIPTS_SRC="$(get_repo_path)/sql_scripts"
 	export <%= ucPrefix %>_REFERENCE_SRC="$(get_repo_path)/reference"
