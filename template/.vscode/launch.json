@@ -14,7 +14,7 @@
       "preLaunchTask": "Set unit test env",
       "justMyCode": false,
       "env": {
-        "PTHONPATH": "${workspaceFolder}/src/<%= projectName %>_libs"
+        "PTHONPATH": "${workspaceFolder}/src/<%= projectNameSnake %>"
       }
     },
     {
@@ -26,11 +26,11 @@
       "console": "integratedTerminal",
       "justMyCode": false,
       "env": {
-        "PTHONPATH": "${workspaceFolder}/src/<%= projectName %>_libs"
+        "PTHONPATH": "${workspaceFolder}/src/<%= projectNameSnake %>"
       },
       "args": [
-        "${userHome}/.ssh/<%= projectName %>_localhost_debug.private.key.pem",
-        "${userHome}/.ssh/<%= projectName %>_localhost_debug.public.key.crt"
+        "${userHome}/.ssh/<%= projectNameSnake %>_localhost_debug.private.key.pem",
+        "${userHome}/.ssh/<%= projectNameSnake %>_localhost_debug.public.key.crt"
       ]
     },
     {
@@ -42,7 +42,7 @@
       "console": "integratedTerminal",
       "justMyCode": false,
       "env": {
-        "PTHONPATH": "${workspaceFolder}/src/<%= projectName %>_libs"
+        "PTHONPATH": "${workspaceFolder}/src/<%= projectNameSnake %>"
       }
     },
     {

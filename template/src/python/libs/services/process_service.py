@@ -5,11 +5,11 @@ import random
 from enum import Enum
 from itertools import dropwhile, islice
 from typing import Optional
-from <%= projectName %>_libs.dtos_and_utilities import (
+from <%= projectNameSnake %>.dtos_and_utilities import (
 	get_non_simple_chars
 )
 from .env_manager import EnvManager
-import <%= projectName %>_libs.dtos_and_utilities.logging as logging
+import <%= projectNameSnake %>.dtos_and_utilities.logging as logging
 
 
 class PackageManagers(Enum):

@@ -1,5 +1,5 @@
 from typing import Any
-from <%= projectName %>_libs.dtos_and_utilities import (
+from <%= projectNameSnake %>.dtos_and_utilities import (
 	seconds_to_tuple,
 	squash_sequential_duplicate_chars
 )

@@ -1,4 +1,4 @@
-from <%= projectName %>_libs.dtos_and_utilities import AccountInfo, hashpw
+from <%= projectNameSnake %>.dtos_and_utilities import AccountInfo, hashpw
 from datetime import datetime, timezone
 
 

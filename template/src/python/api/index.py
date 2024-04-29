@@ -1,6 +1,6 @@
 #pyright: reportUnusedFunction=false, reportMissingTypeStubs=false
 import uvicorn #pyright: ignore [reportMissingTypeStubs]
-import <%= projectName %>_libs.dtos_and_utilities.logging as logging
+import <%= projectNameSnake %>.dtos_and_utilities.logging as logging
 import sys
 from typing import Any
 from traceback import TracebackException
@@ -13,7 +13,7 @@ from fastapi.requests import Request
 from controllers import (
 	accounts_controller
 )
-from <%= projectName %>_libs.dtos_and_utilities import (
+from <%= projectNameSnake %>.dtos_and_utilities import (
 	build_error_obj,
 	AlreadyUsedError
 )

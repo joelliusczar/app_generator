@@ -10,7 +10,7 @@ from .common_fixtures import (
 	fixture_db_conn_in_mem as fixture_db_conn_in_mem,
 	fixture_db_queryer as fixture_db_queryer
 )
-from <%= projectName %>_libs.services import DbOwnerConnectionService
+from <%= projectNameSnake %>.services import DbOwnerConnectionService
 from sqlalchemy.engine import Connection
 from .mocks.db_data import *
 from .mocks import db_population

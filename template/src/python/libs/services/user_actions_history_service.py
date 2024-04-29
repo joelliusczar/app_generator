@@ -8,7 +8,7 @@ from typing import (
 	Collection
 )
 from sqlalchemy.engine import Connection
-from <%= projectName %>_libs.dtos_and_utilities import (
+from <%= projectNameSnake %>.dtos_and_utilities import (
 	get_datetime,
 	UserHistoryActionItem,
 	ActionRule
@@ -18,7 +18,7 @@ from sqlalchemy import (
 	insert,
 	func
 )
-from <%= projectName %>_libs.tables import (
+from <%= projectNameSnake %>.tables import (
 	user_action_history, uah_userFk, uah_action, uah_pk,
 	uah_requestedTimestamp,
 	station_queue, q_stationFk, q_userActionHistoryFk

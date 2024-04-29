@@ -16,8 +16,24 @@ reactTsConst = "react-ts"
 puts "Project Name?"
 projectName = gets.chomp
 
-puts "Project Prefix?"
+while not projectName =~ /^[A-Za-z][A-Za-z0-9 _-]*$/
+	puts "\"#{projectName}\" is invalid. Try again"
+	projectName = gets.chomp
+end
+
+defaultPrefix = build_default_prefix(projectName)
+
+puts "Project Prefix? #{defaultPrefix}"
 prefix = gets.chomp
+
+if prefix.strip.empty?
+	prefix = defaultPrefix
+end
+
+while not prefix =~ /^[A-Za-z][A-Za-z0-9]*$/
+	puts "#{prefix} is invalid. Try again"
+	prefix = gets.chomp
+end
 
 puts "Api Language? Default: #{pythonConst}"
 apiLang = gets.chomp
@@ -27,7 +43,7 @@ feLang = gets.chomp
 
 
 if prefix.strip.empty?
-	prefix = build_default_prefix(projectName)
+	prefix = defaultPrefix
 end
 
 if apiLang.strip.empty?
@@ -45,7 +61,8 @@ feLang = feLang.strip.downcase
 lcPrefix = prefix.downcase
 ucPrefix = prefix.upcase
 devOpsFile = "#{lcPrefix}_dev_ops"
-lcProjectName = projectName.downcase
+projectNameLc = projectName.downcase
+projectNameSnake = to_snake(projectName)
 
 if apiLang == pythonConst
 	db = "mysql"
@@ -56,7 +73,9 @@ end
 choices = {
 	devOpsFile: devOpsFile,
 	projectName: projectName,
-	lcProjectName: lcProjectName,
+	projectNameLc: projectNameLc,
+	projectNameSnake: projectNameSnake,
+	projectNameFlat: to_flat(projectName),
 	ucPrefix: ucPrefix,
 	lcPrefix: lcPrefix,
 	title: projectName,
@@ -70,14 +89,14 @@ if File.exists?("./output")
 end
 
 copy_tpl(
-	"gitignore", 
-	".gitignore", 
+	"gitignore",
+	".gitignore",
 	choices
 )
 
 copy_tpl(
-	"dev_ops.sh", 
-	"#{devOpsFile}.sh", 
+	"dev_ops.sh",
+	"#{devOpsFile}.sh",
 	choices
 )
 
@@ -111,16 +130,6 @@ copy_tpl(
 	"install_script.sh",
 	choices
 )
-
-if apiLang == pythonConst
-	AppGenPythons::generate(choices)
-end
-
-if feLang == reactTsConst
-	AppGenReactTs::generate(choices)
-else
-	AppGenNoFramework::generate(choices)
-end
 
 copy_tpl(
 	"templates/env_api",
@@ -144,5 +153,25 @@ copy_tpl(
 	"templates/nginx_template.conf",
 	choices
 )
+
+copy_tpl(
+	"dev_ops_libs/python/installed_certs/__main__.py",
+	"#{projectNameSnake}_dev_ops/installed_certs/__main__.py"
+)
+
+copy_tpl(
+	"requirements.txt",
+	"requirements.txt"
+)
+
+if apiLang == pythonConst
+	AppGenPythons::generate(choices)
+end
+
+if feLang == reactTsConst
+	AppGenReactTs::generate(choices)
+else
+	AppGenNoFramework::generate(choices)
+end
 
 

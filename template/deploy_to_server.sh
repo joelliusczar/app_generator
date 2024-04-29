@@ -65,7 +65,7 @@ export PB_SECRET=$(__get_pb_secret__) &&
 export PB_API_KEY=$(__get_pb_api_key__) &&
 export <%= ucPrefix %>_AUTH_SECRET_KEY=$(__get_<%= lcPrefix %>_auth_key__) &&
 <% if db == "mysql" %>
-export <%= ucPrefix %>_DATABASE_NAME='<%= projectName %>_db';
+export <%= ucPrefix %>_DATABASE_NAME='<%= projectNameSnake %>_db';
 export __DB_SETUP_PASS__=$(__get_db_setup_key__) &&
 export <%= ucPrefix %>_DB_PASS_OWNER=$(__get_db_owner_key__) &&
 export <%= ucPrefix %>_DB_PASS_API=$(__get_api_db_user_key__)

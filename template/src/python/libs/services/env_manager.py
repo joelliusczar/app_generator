@@ -2,7 +2,7 @@ import os
 import re
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Connection
-from <%= projectName %>_libs.dtos_and_utilities import (
+from <%= projectNameSnake %>.dtos_and_utilities import (
 	DbUsers
 )
 

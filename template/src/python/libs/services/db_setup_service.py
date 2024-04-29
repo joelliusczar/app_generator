@@ -3,12 +3,12 @@ from .env_manager import EnvManager
 from .template_service import TemplateService
 from sqlalchemy import create_engine, NullPool
 from sqlalchemy.engine import Connection
-from <%= projectName %>_libs.dtos_and_utilities import (
+from <%= projectNameSnake %>.dtos_and_utilities import (
 	is_name_safe,
 	DbUsers,
 	SqlScripts
 )
-from <%= projectName %>_libs.tables import metadata
+from <%= projectNameSnake %>.tables import metadata
 #https://github.com/PyMySQL/PyMySQL/issues/590
 from pymysql.constants import CLIENT
 

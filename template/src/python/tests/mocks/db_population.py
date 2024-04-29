@@ -1,8 +1,8 @@
 from datetime import datetime
 from typing import List, Any
 from sqlalchemy.engine import Connection
-from <%= projectName %>_libs.dtos_and_utilities import AccountInfo
-from <%= projectName %>_libs.tables import (
+from <%= projectNameSnake %>.dtos_and_utilities import AccountInfo
+from <%= projectNameSnake %>.tables import (
 	users,
 	userRoles,
 	user_action_history,

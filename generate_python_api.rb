@@ -6,15 +6,16 @@ module AppGenPythons
 	def self.generate(choices)
 
 		projectName = choices[:projectName]
+		projectNameSnake = choices[:projectNameSnake]
 		fromLibs = "python/libs"
 		fromApi = "python/api"
 		fromTests = "python/tests"
 
 		srcDtosAndUtilitiesDir = "src/#{fromLibs}/dtos_and_utilities"
-		destDtosAndUtilitiesDir = "src/#{projectName}_libs/dtos_and_utilities"
+		destDtosAndUtilitiesDir = "src/#{projectNameSnake}/dtos_and_utilities"
 
 		copy_tpl(
-			"#{srcDtosAndUtilitiesDir}/type_aliases.py", 
+			"#{srcDtosAndUtilitiesDir}/type_aliases.py",
 			"#{destDtosAndUtilitiesDir}/type_aliases.py"
 		)
 
@@ -84,17 +85,12 @@ module AppGenPythons
 		)
 
 		copy_tpl(
-			"src/#{fromLibs}/dev/ssl/installed_certs/__main__.py",
-			"src/#{projectName}_libs/dev/ssl/installed_certs/__main__.py"
-		)
-
-		copy_tpl(
 			"src/#{fromLibs}/tables.py",
-			"src/#{projectName}_libs/tables.py"
+			"src/#{projectNameSnake}/tables.py"
 		)
 
 		srcServicesDir = "src/#{fromLibs}/services"
-		destServicesDir = "src/#{projectName}_libs/services"
+		destServicesDir = "src/#{projectNameSnake}/services"
 
 		copy_tpl(
 			"#{srcServicesDir}/env_manager.py",
@@ -139,42 +135,42 @@ module AppGenPythons
 
 		copy_tpl(
 			"src/#{fromLibs}/__init__.py",
-			"src/#{projectName}_libs/__init__.py"
+			"src/#{projectNameSnake}/__init__.py"
 		)
 
-		
+
 		copy_tpl(
-			"src/#{fromApi}/api_error.py", 
+			"src/#{fromApi}/api_error.py",
 			"src/api/api_error.py",
 			choices
 		)
 
 		copy_tpl(
-			"src/#{fromApi}/api_dependencies.py", 
+			"src/#{fromApi}/api_dependencies.py",
 			"src/api/api_dependencies.py",
 			choices
 		)
 
 		copy_tpl(
-			"src/#{fromApi}/accounts_controller.py", 
+			"src/#{fromApi}/accounts_controller.py",
 			"src/api/accounts_controller.py",
 			choices
 		)
 
 		copy_tpl(
-			"src/#{fromApi}/index.py", 
+			"src/#{fromApi}/index.py",
 			"src/api/index.py",
 			choices
 		)
 
 		copy_tpl(
-			"src/#{fromApi}/accounts_controller.py", 
+			"src/#{fromApi}/accounts_controller.py",
 			"src/api/accounts_controller.py",
 			choices
 		)
 
 		copy_tpl(
-			"src/#{fromApi}/api_dependencies.py", 
+			"src/#{fromApi}/api_dependencies.py",
 			"src/api/api_dependencies.py",
 			choices
 		)
@@ -184,123 +180,118 @@ module AppGenPythons
 			"src/#{fromTests}/mocks/__init__.py",
 			"src/tests/mocks/__init__.py"
 		)
-		
+
 		copy_tpl(
-			"src/#{fromTests}/mocks/constant_values_defs.py", 
+			"src/#{fromTests}/mocks/constant_values_defs.py",
 			"src/tests/mocks/constant_values_defs.py",
 			choices
 		)
-		
+
 		copy_tpl(
-			"src/#{fromTests}/mocks/db_data.py", 
+			"src/#{fromTests}/mocks/db_data.py",
 			"src/tests/mocks/db_data.py",
 			choices
 		)
-		
+
 		copy_tpl(
-			"src/#{fromTests}/mocks/db_population.py", 
+			"src/#{fromTests}/mocks/db_population.py",
 			"src/tests/mocks/db_population.py",
 			choices
 		)
-		
+
 		copy_tpl(
 			"src/#{fromTests}/mocks/mock_datetime_provider.py",
 			"src/tests/mocks/mock_datetime_provider.py")
-		
+
 		copy_tpl(
-			"src/#{fromTests}/mocks/mock_db_constructors.py", 
+			"src/#{fromTests}/mocks/mock_db_constructors.py",
 			"src/tests/mocks/mock_db_constructors.py",
 			choices
 		)
-		
+
 		copy_tpl(
 			"src/#{fromTests}/mocks/special_strings_reference.py",
 			"src/tests/mocks/special_strings_reference.py"
 		)
-		
+
 		copy_tpl(
 			"src/#{fromTests}/__init__.py",
 			"src/tests/__init__.py"
 		)
-		
+
 		copy_tpl(
 			"src/#{fromTests}/api_test_dependencies.py",
 			"src/tests/api_test_dependencies.py"
 		)
-		
+
 		copy_tpl(
 			"src/#{fromTests}/common_fixtures.py",
 			"src/tests/common_fixtures.py",
 			choices
 		)
-		
+
 		copy_tpl(
 			"src/#{fromTests}/constant_fixtures_for_test.py",
 			"src/tests/constant_fixtures_for_test.py",
 			choices
 		)
-		
+
 		copy_tpl(
 			"src/#{fromTests}/helpers.py",
 			"src/tests/helpers.py"
 		)
-		
+
 		copy_tpl(
-			"src/#{fromTests}/test_account_service.py", 
+			"src/#{fromTests}/test_account_service.py",
 			"src/tests/test_account_service.py",
 			choices
 		)
-		
+
 		copy_tpl(
-			"src/#{fromTests}/test_accounts_controller.py", 
+			"src/#{fromTests}/test_accounts_controller.py",
 			"src/tests/test_accounts_controller.py",
 			choices
 		)
-		
+
 		copy_tpl(
 			"src/#{fromTests}/test_dtos.py",
 			"src/tests/test_dtos.py",
 			choices
 		)
-		
+
 		copy_tpl(
 			"src/#{fromTests}/test_fast_api.py",
 			"src/tests/test_fast_api.py"
 		)
-		
+
 		copy_tpl(
 			"src/#{fromTests}/test_in_mem_db.py",
 			"src/tests/test_in_mem_db.py",
 			choices
 		)
-		
+
 		copy_tpl(
 			"src/#{fromTests}/test_python.py",
 			"src/tests/test_python.py"
 		)
-		
+
 		copy_tpl(
 			"src/#{fromTests}/test_simple_functions.py",
 			"src/tests/test_simple_functions.py",
 			choices
 		)
-		
+
 		copy_tpl(
 			"src/#{fromTests}/test_test_env.py",
 			"src/tests/test_test_env.py",
 			choices
 		)
-		
+
 		copy_tpl(
 			"src/#{fromTests}/pytest.ini",
 			"src/tests/pytest.ini"
 		)
 
-		copy_tpl(
-			"requirements.txt",
-			"requirements.txt"
-		)
-		
 
 	end
 end

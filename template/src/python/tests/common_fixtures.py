@@ -5,7 +5,7 @@ import hashlib
 import subprocess
 from typing import Iterator, List, Any, Callable, cast
 from datetime import datetime
-from <%= projectName %>_libs.services import (
+from <%= projectNameSnake %>.services import (
 	EnvManager,
 	AccountsService,
 	TemplateService,
@@ -13,7 +13,7 @@ from <%= projectName %>_libs.services import (
 	DbRootConnectionService,
 	DbOwnerConnectionService
 )
-from <%= projectName %>_libs.dtos_and_utilities import (
+from <%= projectNameSnake %>.dtos_and_utilities import (
 	AccountInfo,
 	ActionRule
 )

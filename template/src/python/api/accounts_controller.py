@@ -11,9 +11,9 @@ from fastapi import (
 	Cookie
 )
 from fastapi.security import OAuth2PasswordRequestForm
-from <%= projectName %>_libs.services import AccountsService,\
+from <%= projectNameSnake %>.services import AccountsService,\
 	ACCESS_TOKEN_EXPIRE_MINUTES
-from <%= projectName %>_libs.dtos_and_utilities import (
+from <%= projectNameSnake %>.dtos_and_utilities import (
 	AccountCreationInfo,
 	AccountInfo,
 	AuthenticatedAccount,

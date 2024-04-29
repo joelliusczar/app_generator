@@ -2,7 +2,7 @@ import hashlib
 from pathlib import Path
 from .env_manager import EnvManager
 from .process_service import ProcessService
-from <%= projectName %>_libs.dtos_and_utilities import SqlScripts
+from <%= projectNameSnake %>.dtos_and_utilities import SqlScripts
 
 
 class TemplateService:

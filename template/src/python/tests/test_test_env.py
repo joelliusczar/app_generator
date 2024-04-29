@@ -9,7 +9,7 @@ def test_show_path():
 
 
 def test_show_db_setup_pass():
-	from <%= projectName %>_libs.services import EnvManager
+	from <%= projectNameSnake %>.services import EnvManager
 	dbSetupPass = EnvManager.db_setup_pass()
 	dbOwnerPass = EnvManager.db_pass_owner()
 	dbApiPass = EnvManager.db_pass_api()

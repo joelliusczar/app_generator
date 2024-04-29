@@ -1,5 +1,5 @@
 import pytest
-from <%= projectName %>_libs.dtos_and_utilities import (
+from <%= projectNameSnake %>.dtos_and_utilities import (
 	AccountInfo,
 	SavedNameString,
 	SearchNameString,

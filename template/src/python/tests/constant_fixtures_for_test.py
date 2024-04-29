@@ -1,5 +1,5 @@
 import pytest
-from <%= projectName %>_libs.dtos_and_utilities import AccountInfo
+from <%= projectNameSnake %>.dtos_and_utilities import AccountInfo
 from datetime import datetime
 from .mocks.constant_values_defs import\
 mock_password,\

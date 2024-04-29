@@ -12,7 +12,7 @@ from sqlalchemy import (
 	or_
 )
 from sqlalchemy import Integer, String
-from <%= projectName %>_libs.tables import (
+from <%= projectNameSnake %>.tables import (
 	ur_userFk, ur_role, ur_count, ur_span, ur_priority,
 	u_username, u_pk, u_displayName, u_email, u_dirRoot,
 )

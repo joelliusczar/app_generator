@@ -3,9 +3,9 @@ import pytest
 from sqlalchemy import insert
 from sqlalchemy.engine import Connection
 from datetime import datetime, timezone
-from <%= projectName %>_libs.tables import station_queue
-from <%= projectName %>_libs.services import AccountsService
-from <%= projectName %>_libs.dtos_and_utilities import (
+from <%= projectNameSnake %>.tables import station_queue
+from <%= projectNameSnake %>.services import AccountsService
+from <%= projectNameSnake %>.dtos_and_utilities import (
 	AccountInfo,
 	UserRoleDef,
 	ActionRule

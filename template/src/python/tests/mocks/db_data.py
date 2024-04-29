@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import List, Any
-from <%= projectName %>_libs.dtos_and_utilities import (
+from <%= projectNameSnake %>.dtos_and_utilities import (
 	AccountInfo,
 	UserRoleDef,
 	RulePriorityLevel,

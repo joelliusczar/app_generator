@@ -4,9 +4,12 @@ import logging as builtin_logging
 
 formatter = builtin_logging.Formatter("%(asctime)s %(message)s")
 
-handler = builtin_logging.FileHandler("<%= projectName %>.log", encoding="utf-8")
+handler = builtin_logging.FileHandler(
+	"<%= projectNameSnake %>.log",
+	encoding="utf-8"
+)
 debugOnlyhandler = builtin_logging.FileHandler(
-	"<%= projectName %>-debug.log",
+	"<%= projectNameSnake %>-debug.log",
 	encoding="utf-8"
 )
 

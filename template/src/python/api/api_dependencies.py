@@ -16,13 +16,13 @@ from fastapi import (
 	Path
 )
 from sqlalchemy.engine import Connection
-from <%= projectName %>_libs.services import (
+from <%= projectNameSnake %>.services import (
 	EnvManager,
 	AccountsService,
 	ProcessService,
 	UserActionsHistoryService
 )
-from <%= projectName %>_libs.dtos_and_utilities import (
+from <%= projectNameSnake %>.dtos_and_utilities import (
 	AccountInfo,
 	build_error_obj,
 	UserRoleDomain,
@@ -67,7 +67,7 @@ def get_configured_db_connection(
 ) -> Iterator[Connection]:
 	if not envManager:
 		envManager = EnvManager()
-	conn = envManager.get_configured_api_connection("<%= projectName %>_db")
+	conn = envManager.get_configured_api_connection("<%= projectNameSnake %>_db")
 	try:
 		yield conn
 	finally:

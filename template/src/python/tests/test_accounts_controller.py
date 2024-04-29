@@ -1,5 +1,5 @@
 import json
-from <%= projectName %>_libs.dtos_and_utilities import UserRoleDef
+from <%= projectNameSnake %>.dtos_and_utilities import UserRoleDef
 from .api_test_dependencies import\
 	fixture_api_test_client as fixture_api_test_client
 from .api_test_dependencies import *

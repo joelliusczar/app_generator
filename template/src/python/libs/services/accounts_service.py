@@ -9,7 +9,7 @@ from typing import (
 	cast,
 	Union
 )
-from <%= projectName %>_libs.dtos_and_utilities import (
+from <%= projectNameSnake %>.dtos_and_utilities import (
 	AccountInfo,
 	SavedNameString,
 	AccountCreationInfo,
@@ -31,7 +31,7 @@ from <%= projectName %>_libs.dtos_and_utilities import (
 from .env_manager import EnvManager
 from sqlalchemy.engine import Connection
 from sqlalchemy.sql.functions import coalesce
-from <%= projectName %>_libs.tables import (
+from <%= projectNameSnake %>.tables import (
 	users, u_pk, u_username, u_hashedPW, u_email, u_disabled,
 	u_creationTimestamp, u_displayName,
 	userRoles, ur_userFk, ur_role

@@ -1,5 +1,5 @@
 from fastapi import HTTPException, status
-from <%= projectName %>_libs.dtos_and_utilities import (
+from <%= projectNameSnake %>.dtos_and_utilities import (
 	build_error_obj,
 	seconds_to_tuple,
 	build_timespan_msg

@@ -9,22 +9,22 @@
   "python.analysis.typeCheckingMode": "strict",
   "python.analysis.indexing": true,
   "python.analysis.useLibraryCodeForTypes": true,
-  "python.defaultInterpreterPath": "${workspaceFolder}/test_trash/<%= projectName %>_dir/<%= lcPrefix %>_env/bin/python",
+  "python.defaultInterpreterPath": "${workspaceFolder}/test_trash/<%= projectNameSnake %>/<%= lcPrefix %>_env/bin/python",
   "terminal.integrated.env.osx": {
     "PTHONPATH": "${workspaceFolder}/src: ${workspaceFolder}/src/api",
-    "<%= ucPrefix %>_LIB_NAME": "<%= projectName %>_libs",
-    "<%= ucPrefix %>_APP_NAME": "<%= projectName %>_app",
+    "<%= ucPrefix %>_LIB": "<%= projectNameSnake %>",
+    "<%= ucPrefix %>_APP": "<%= projectNameSnake %>",
     "<%= ucPrefix %>_TEST_ROOT": "${workspaceFolder}/test_trash"
   },
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
   "python.testing.cwd": "${workspaceFolder}/src/tests",
-  "python.testing.pytestPath": "${workspaceFolder}/test_trash/<%= projectName %>_dir/<%= lcPrefix %>_env/bin/pytest",
+  "python.testing.pytestPath": "${workspaceFolder}/test_trash/<%= projectNameSnake %>/<%= lcPrefix %>_env/bin/pytest",
   "python.testing.pytestArgs": [
     "-s", "-p", "no:warnings"
   ],
   "python.terminal.activateEnvironment": false,
-  "python.envFile": "${workspaceFolder}/test_trash/<%= projectName %>_dir/config/.env",
+  "python.envFile": "${workspaceFolder}/test_trash/<%= projectNameSnake %>/config/.env",
   "search.exclude": {
     "**/test_trash": true
   },
