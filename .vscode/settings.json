@@ -5,7 +5,8 @@
     "editorRuler.foreground": "#ef40ff"
   },
   "search.exclude": {
-    "**/test_trash": true
+    "**/test_trash": true,
+    "**/output":true
   },
   "editor.insertSpaces": false,
 }

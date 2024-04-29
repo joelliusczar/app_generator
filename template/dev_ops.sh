@@ -2198,7 +2198,7 @@ unset_globals() {
 		__DB_SETUP_PASS__
 	EOF
 	)
-	cat "$(get_repo_path)"/<%= lcPrefix %>_dev_ops_utilities.sh | grep export \
+	cat "$(get_repo_path)"/<%= lcPrefix %>_dev_ops.sh | grep export \
 		| sed -n -e 's/^\t*export \([a-zA-Z0-9_]\{1,\}\)=.*/\1/p' | sort -u \
 		| while read constant; do
 				#exceptions is unquoted on purpose
