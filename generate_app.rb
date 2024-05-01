@@ -103,8 +103,8 @@ copy_tpl(
 
 
 copy_tpl(
-	"deploy_to_server.sh",
-	"deploy_to_server.sh",
+	"deploy.sh",
+	"deploy.sh",
 	choices
 )
 
@@ -127,8 +127,8 @@ copy_tpl(
 )
 
 copy_tpl(
-	"install_script.sh",
-	"install_script.sh",
+	"install.sh",
+	"install.sh",
 	choices
 )
 

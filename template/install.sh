@@ -133,7 +133,7 @@ if ! nvm run node --version 2>/dev/null; then
 	nvm install node
 fi
 
-
+<% if db == "mysql" %>
 echo '##### mariadb #####'
 if ! mariadb -V 2>/dev/null; then
 	if [ -n "$__DB_SETUP_PASS__" ]; then
@@ -156,6 +156,7 @@ if ! mariadb -V 2>/dev/null; then
 		show_err_and_exit 'Need a password for root db account to install database'
 	fi
 fi
+<% end %>
 
 echo '##### sqlite3 #####'
 if ! sqlite3 -version 2>/dev/null; then

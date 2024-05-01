@@ -181,7 +181,6 @@ empty_dir_contents() (
 	else
 		sudo_mkdir "$dirEmptira" || return "$?"
 	fi &&
-	unroot_dir "$dirEmptira" &&
 	echo "done emptying '${dirEmptira}'"
 )
 
@@ -468,7 +467,7 @@ brew_is_installed() (
 )
 
 
-deployment_env_check_recommended() {
+__deployment_env_check_recommended__() {
 	#possibly problems if missing
 
 	[ -z "$<%= ucPrefix %>_LOCAL_REPO_DIR" ] &&
@@ -482,7 +481,7 @@ deployment_env_check_recommended() {
 }
 
 
-deployment_env_check_required() {
+__deployment_env_check_required__() {
 	#definitely problems if missing
 	[ -z "$<%= ucPrefix %>_REPO_URL" ] &&
 	echo 'environmental var <%= ucPrefix %>_REPO_URL not set'
@@ -509,7 +508,7 @@ deployment_env_check_required() {
 	track_exit_code
 
 	#for encrypting app token
-	[ -z $(__get_<%= ucPrefix %>_auth_key__) ] &&
+	[ -z $(__get_<%= lcPrefix %>_auth_key__) ] &&
 	echo 'deployment var <%= ucPrefix %>_AUTH_SECRET_KEY not set in keys'
 	track_exit_code
 
@@ -525,12 +524,12 @@ deployment_env_check_required() {
 
 deployment_env_check() (
 	echo 'checking environment vars before deployment'
-	deployment_env_check_recommended
-	deployment_env_check_required
+	__deployment_env_check_recommended__
+	__deployment_env_check_required__
 )
 
 
-server_env_check_recommended() {
+__server_env_check_recommended__() {
 	#possibly problems if missing
 	[ -z "$<%= ucPrefix %>_LOCAL_REPO_DIR" ] &&
 	echo 'environmental var <%= ucPrefix %>_LOCAL_REPO_DIR not set'
@@ -543,7 +542,7 @@ server_env_check_recommended() {
 }
 
 
-server_env_check_required() {
+__server_env_check_required__() {
 	#definitely problems if missing
 	[ -z "$<%= ucPrefix %>_REPO_URL" ] &&
 	echo 'environmental var <%= ucPrefix %>_REPO_URL not set'
@@ -578,12 +577,12 @@ server_env_check_required() {
 
 server_env_check() (
 	echo 'checking environment vars on server'
-	server_env_check_recommended
-	server_env_check_required
+	__server_env_check_recommended__
+	__server_env_check_required__
 )
 
 
-dev_env_check_recommended() {
+__dev_env_check_recommended__() {
 	#possibly problems if missing
 	[ -z "$BOT_REPO_URL" ] &&
 	echo 'environmental var BOT_REPO_URL not set'
@@ -596,7 +595,7 @@ dev_env_check_recommended() {
 }
 
 
-dev_env_check_required() {
+__dev_env_check_required__() {
 	#definitely problems if missing
 	[ -z "$<%= ucPrefix %>_LOCAL_REPO_DIR" ] &&
 	echo 'environmental var <%= ucPrefix %>_LOCAL_REPO_DIR not set'
@@ -629,8 +628,8 @@ dev_env_check_required() {
 
 dev_env_check() (
 	echo 'checking environment vars on local dev environment'
-	dev_env_check_recommended
-	dev_env_check_required
+	__dev_env_check_recommended__
+	__dev_env_check_required__
 )
 
 
@@ -1067,9 +1066,10 @@ sync_requirement_list() (
 )
 
 
-run_initial_install_script() (
+run_initial_install() (
 	process_global_vars "$@" &&
-	sh $(get_repo_path)/install_setup.sh
+	__setup_api_dir__
+	sh $(get_repo_path)/install.sh
 )
 
 
@@ -1113,7 +1113,7 @@ extract_commonName_from_cert() (
 scan_pems_for_common_name() (
 	commonName="$1"
 	activate_<%= lcPrefix %>_env &&
-	python -m '<%= projectNameSnake %>_dev_ops.installed_certs' \"$commonName" \
+	python -m '<%= projectNameSnake %>_dev_ops.installed_certs' "$commonName" \
 		< /etc/ssl/certs/ca-certificates.crt
 )
 
@@ -1372,7 +1372,7 @@ print_ssl_cert_info() (
 							cert=''
 						fi
 					done
-					;;
+			;;
 		(*)
 			publicKeyFile=$(__get_remote_public_key__) &&
 			cat "$publicKeyFile" | openssl x509 -enddate -subject -noout
@@ -1402,6 +1402,7 @@ setup_ssl_cert_nginx() (
 			add_test_url_to_hosts "$domain"
 			publicKeyFile=$(__get_local_nginx_cert_path__).public.key.crt &&
 			privateKeyFile=$(__get_local_nginx_cert_path__).private.key.pem &&
+
 			# we're leaving off the && because what would that even mean here?
 			__clean_up_invalid_cert__ "$domain"
 			if [ -z $(__certs_matching_name_exact__ "$domain") ]; then
@@ -1432,6 +1433,7 @@ setup_ssl_cert_nginx() (
 			fi
 			;;
 	esac
+	echo "Done setting up certificates for ${domain}"
 )
 
 
@@ -1497,6 +1499,43 @@ __copy_and_update_nginx_template__() {
 }
 
 
+__set_local_nginx_app_conf__() {
+	publicKey=$(__get_local_nginx_cert_path__).public.key.crt &&
+	privateKey=$(__get_local_nginx_cert_path__).private.key.pem &&
+	sudo -p "update ${appConfFile}" \
+		perl -pi -e "s/<listen>/8080 ssl/" "$appConfFile" &&
+	sudo -p "update ${appConfFile}" \
+		perl -pi -e "s@<ssl_public_key>@${publicKey}@" \
+		"$appConfFile" &&
+	sudo -p "update ${appConfFile}" \
+		perl -pi -e "s@<ssl_private_key>@${privateKey}@" \
+		"$appConfFile"
+}
+
+
+__set_deployed_nginx_app_conf__() {
+	sudo -p "update ${appConfFile}" \
+		perl -pi -e "s/<listen>/[::]:443 ssl/" "$appConfFile" &&
+
+		sudo -p "update ${appConfFile}" \
+		perl -pi -e \
+		"s@<ssl_public_key>@$(__get_remote_public_key__)@" \
+		"$appConfFile" &&
+	sudo -p "update ${appConfFile}" \
+		perl -pi -e \
+		"s@<ssl_private_key>@$(__get_remote_private_key__)@" \
+		"$appConfFile" &&
+	sudo -p "update ${appConfFile}" \
+		perl -pi -e \
+		"s@<ssl_intermediate>@$(__get_remote_intermediate_key__)@" \
+		"$appConfFile" &&
+	sudo -p "update ${appConfFile}" \
+		perl -pi -e \
+		's/#ssl_trusted_certificate/ssl_trusted_certificate/' \
+		"$appConfFile"
+}
+
+
 update_nginx_conf() (
 	echo 'updating nginx site conf'
 	appConfFile="$1"
@@ -1504,37 +1543,10 @@ update_nginx_conf() (
 	__copy_and_update_nginx_template__ &&
 	case "$<%= ucPrefix %>_ENV" in
 		(local*)
-			publicKey=$(__get_local_nginx_cert_path__).public.key.crt &&
-			privateKey=$(__get_local_nginx_cert_path__).private.key.pem &&
-			sudo -p "update ${appConfFile}" \
-				perl -pi -e "s/<listen>/8080 ssl/" "$appConfFile" &&
-			sudo -p "update ${appConfFile}" \
-				perl -pi -e "s@<ssl_public_key>@${publicKey}@" \
-				"$appConfFile" &&
-			sudo -p "update ${appConfFile}" \
-				perl -pi -e "s@<ssl_private_key>@${privateKey}@" \
-				"$appConfFile"
+			__set_local_nginx_app_conf__
 			;;
 		(*)
-			sudo -p "update ${appConfFile}" \
-				perl -pi -e "s/<listen>/[::]:443 ssl/" "$appConfFile" &&
-
-				sudo -p "update ${appConfFile}" \
-				perl -pi -e \
-				"s@<ssl_public_key>@$(__get_remote_public_key__)@" \
-				"$appConfFile" &&
-			sudo -p "update ${appConfFile}" \
-				perl -pi -e \
-				"s@<ssl_private_key>@$(__get_remote_private_key__)@" \
-				"$appConfFile" &&
-			sudo -p "update ${appConfFile}" \
-				perl -pi -e \
-				"s@<ssl_intermediate>@$(__get_remote_intermediate_key__)@" \
-				"$appConfFile" &&
-			sudo -p "update ${appConfFile}" \
-				perl -pi -e \
-				's/#ssl_trusted_certificate/ssl_trusted_certificate/' \
-				"$appConfFile"
+			__set_deployed_nginx_app_conf__
 			;;
 	esac &&
 	echo 'done updating nginx site conf'
@@ -1727,6 +1739,7 @@ setup_api() (
 	process_global_vars "$@" &&
 	sync_utility_scripts &&
 <% if apiLang == "python" %>
+	__setup_api_dir__ &&
 	sync_requirement_list &&
 	copy_dir "$<%= ucPrefix %>_TEMPLATES_SRC" "$(__get_app_root__)"/"$<%= ucPrefix %>_TEMPLATES_DEST" &&
 	copy_dir "$<%= ucPrefix %>_API_SRC" "$(get_web_root)"/"$<%= ucPrefix %>_API_DEST" &&
@@ -1925,6 +1938,19 @@ debug_print() (
 )
 
 
+get_rc_candidate() {
+	case $(uname) in
+		(Linux*)
+			echo "$HOME"/.bashrc
+			;;
+		(Darwin*)
+			echo "$HOME"/.zshrc
+			;;
+		(*) ;;
+	esac
+}
+
+
 __get_app_root__() (
 	if [ -n "$__TEST_FLAG__" ]; then
 		echo "$<%= ucPrefix %>_TEST_ROOT"
@@ -2047,8 +2073,8 @@ define_consts() {
 	# suffixed with DEST
 	export <%= ucPrefix %>_TEMPLATES_DEST="$<%= ucPrefix %>_TRUNK"/templates
 	export <%= ucPrefix %>_SQL_SCRIPTS_DEST="$<%= ucPrefix %>_TRUNK"/sql_scripts
-	export <%= ucPrefix %>_API_DEST=api/"$<%= ucPrefix %>"
-	export <%= ucPrefix %>_CLIENT_DEST=client/"$<%= ucPrefix %>"
+	export <%= ucPrefix %>_API_DEST=api/"$<%= ucPrefix %>_APP"
+	export <%= ucPrefix %>_CLIENT_DEST=client/"$<%= ucPrefix %>_APP"
 
 
 	export <%= ucPrefix %>_SERVER_NAME=$(__get_domain_name__ "$<%= ucPrefix %>_ENV")
@@ -2080,7 +2106,7 @@ __get_domain_name__() (
 	urlBase=$(__get_url_base__)
 	tld=''
 	if [ -z "$tld" ]; then
-		#tld has been setup for this app yet
+		echo "tld has been setup for this app yet" >&2
 		echo ""
 	fi
 	case "$envArg" in
@@ -2130,15 +2156,12 @@ setup_app_directories() {
 }
 
 
-setup_base_dirs() {
-
-	setup_app_directories
-
-	[ -e "$(get_web_root)"/"$<%= ucPrefix %>_API_DEST" ] ||
+__setup_api_dir__() {
+	if [ !  -e "$(get_web_root)"/"$<%= ucPrefix %>_API_DEST" ]; then
 	{
 		sudo -p 'Pass required to create web server directory: ' \
 			mkdir -pv "$(get_web_root)"/"$<%= ucPrefix %>_API_DEST" ||
-		show_err_and_exit "Could not create $(get_web_root)/${<%= ucPrefix %>_API_DEST}"
+		show_err_and_return "Could not create $(get_web_root)/${<%= ucPrefix %>_API_DEST}"
 	}
 }
 
@@ -2157,7 +2180,7 @@ process_global_vars() {
 
 	define_consts &&
 	define_directory_vars &&
-	setup_base_dirs &&
+	setup_app_directories &&
 
 	export __GLOBALS_SET__='globals'
 }

@@ -17,7 +17,7 @@ fi
 process_global_vars "$@" ||
 show_err_and_exit "local error with global variables"
 
-deployment_local_env_check ||
+deployment_env_check ||
 show_err_and_exit "local error with missing keys"
 
 if [ -n "$(git status --porcelain)" ]; then
@@ -80,12 +80,13 @@ RemoteScriptEOF0
 echo "SSH connection? ${SSH_CONNECTION}"
 [ -n "$SSH_CONNECTION" ] ||
 show_err_and_exit "This section should only be run remotely"
+
 #in addition to setting up any utilizing any passed in params
 #we call process_global_vars to also set up directories
 process_global_vars "$@" ||
 show_err_and_exit "error with global variables on server"
 
-deployment_server_env_check ||
+server_env_check ||
 show_err_and_exit "error with missing keys on server"
 
 create_install_directory &&
@@ -96,14 +97,17 @@ fi
 
 error_check_path "$(get_repo_path)" &&
 rm -rf "$(get_repo_path)" &&
+
 #since the clone will create the sub dir, we'll just start in the parent
 cd "$(__get_app_root__)"/"$<%= ucPrefix %>_BUILD_DIR" &&
-git clone "$<%= ucPrefix %>_REPO_URL" "$<%= ucPrefix %>_PROJ_NAME" &&
-cd "$<%= ucPrefix %>_PROJ_NAME"  &&
+git clone "$<%= ucPrefix %>_REPO_URL" "$<%= ucPrefix %>_PROJ_NAME_SNAKE" &&
+cd "$<%= ucPrefix %>_PROJ_NAME_SNAKE"  &&
+
 if [ "$currentBranch" != main ]; then
 	echo "Using branch ${currentBranch}"
 	git checkout -t origin/"$currentBranch" || exit 1
 fi
+
 cd "$(__get_app_root__)"
 RemoteScriptEOF1
 } > clone_repo_fifo &
@@ -129,7 +133,7 @@ if is_ssh; then
 	elif [ "$__SETUP_LVL__" = 'install' ]; then
 		echo "$__SETUP_LVL__"
 		. ./<%= devOpsFile %>.sh &&
-		run_initial_install_script
+		run_initial_install
 		echo "finished setup"
 	else
 		echo "$__SETUP_LVL__"
