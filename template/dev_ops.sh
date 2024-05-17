@@ -1256,6 +1256,8 @@ __install_local_cert_debian__() (
 
 __clean_up_invalid_cert__() (
 	commonName="$1" &&
+	certName="$2" &&
+	echo "Clean up certs for ${commonName} if needed"
 	case $(uname) in
 		(Darwin*)
 			cert=''
@@ -1279,12 +1281,15 @@ __clean_up_invalid_cert__() (
 					| while read line; do
 						cert=$(printf "%s\n%s" "$cert" "$line")
 						if [ "$line" = '-----END CERTIFICATE-----' ]; then
-							sha256Value=$(echo "$cert" | extract_sha256_from_cert) &&
 							echo "$cert" | is_cert_expired &&
 							{
+								certDir='/usr/local/share/ca-certificates'
+								if [ -z "$certName" ]; then
+									certName="$commonName"
+								fi
 								sudo -p \
-									"Need pass to delete from /usr/local/share/ca-certificates" \
-									rm /usr/local/share/ca-certificates/"$commonName"*.crt;
+									"Need pass to delete from ${certDir}" \
+									rm "$certDir"/"$certName"*.crt;
 								sudo update-ca-certificates
 							}
 							cert=''
@@ -1341,6 +1346,7 @@ setup_ssl_cert_local_debug() (
 print_ssl_cert_info() (
 	process_global_vars "$@" &&
 	domain=$(__get_domain_name__ "$<%= ucPrefix %>_ENV" 'omitPort') &&
+	echo "$domain"
 	case "$<%= ucPrefix %>_ENV" in
 		(local*)
 			isDebugServer=${1#is_debug_server=}
@@ -1404,7 +1410,7 @@ setup_ssl_cert_nginx() (
 			privateKeyFile=$(__get_local_nginx_cert_path__).private.key.pem &&
 
 			# we're leaving off the && because what would that even mean here?
-			__clean_up_invalid_cert__ "$domain"
+			__clean_up_invalid_cert__ "$domain" $(__get_local_nginx_cert_name__)
 			if [ -z $(__certs_matching_name_exact__ "$domain") ]; then
 				__setup_ssl_cert_local__ \
 				"$domain" "$domain" "$publicKeyFile" "$privateKeyFile"
