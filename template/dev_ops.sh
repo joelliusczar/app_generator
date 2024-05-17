@@ -1992,6 +1992,11 @@ connect_remote() (
 		$(__get_remote_export_script__) bash -l
 )
 
+print_exported_env_vars() (
+	process_global_vars "$@" &&
+	echo "App root: $(__get_app_root__)"
+	__get_remote_export_script__ "$@"
+)
 
 connect_sftp() (
 	process_global_vars "$@" >&2 &&
