@@ -20,7 +20,7 @@ from .simple_functions import (
 	get_duplicates,
 	validate_email,
 )
-from .generic_dtos import IdItem, FrozenBaseClass
+from .generic_dtos import FrozenIdItem, FrozenBaseClass
 from .action_rule_dtos import (
 	ActionRule
 )
@@ -68,7 +68,7 @@ class AccountInfoSecurity(AccountInfoBase):
 	):
 		return value
 
-class AccountInfo(AccountInfoSecurity, IdItem):
+class AccountInfo(AccountInfoSecurity, FrozenIdItem):
 	...
 
 

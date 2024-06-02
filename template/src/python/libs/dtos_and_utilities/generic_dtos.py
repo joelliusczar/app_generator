@@ -3,7 +3,7 @@ from typing import (
 	TypeVar,
 	Generic
 )
-from pydantic import BaseModel as <%= ucPrefix %>BaseClass, ConfigDict
+from pydantic import BaseModel as <%= ucPrefix %>BaseClass, ConfigDict, Field
 
 
 T = TypeVar("T")
@@ -22,5 +22,21 @@ class TableData(ListData[T]):
 # class ErrorInfo(BaseModel):
 # 	msg: str
 
-class IdItem(FrozenBaseClass):
+class FrozenIdItem(FrozenBaseClass):
 	id: int
+
+class FrozenNamed(FrozenBaseClass):
+	name: str
+
+class FrozenNamedIdItem(FrozenIdItem, FrozenNamed):
+	...
+
+
+class IdItem(<%= ucPrefix %>BaseClass):
+	id: int=Field(frozen=True)
+
+class Named(<%= ucPrefix %>BaseClass):
+	name: str=Field(frozen=True)
+
+class NamedIdItem(IdItem, Named):
+	...
