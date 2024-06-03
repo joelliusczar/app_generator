@@ -4,6 +4,7 @@
   "workbench.colorCustomizations": {
     "editorRuler.foreground": "#ef40ff"
   },
+<% if apiLang == "python" %>
   "python.analysis.extraPaths": ["src/tests"],
   "python.languageServer": "Pylance",
   "python.analysis.typeCheckingMode": "strict",
@@ -25,6 +26,7 @@
   ],
   "python.terminal.activateEnvironment": false,
   "python.envFile": "${workspaceFolder}/test_trash/<%= projectNameSnake %>/config/.env",
+<% end %>
   "search.exclude": {
     "**/test_trash": true
   },
