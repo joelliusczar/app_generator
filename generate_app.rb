@@ -10,8 +10,18 @@ include AppGenUtils
 
 
 
-pythonConst = "python"
-reactTsConst = "react-ts"
+pythonChoice = 2
+reactTsChoice = 2
+
+apiLangMap = {
+	1 => { name: "", display: "Nothing" },
+	2 => { name: "python", display: "Python 3" }
+}
+
+feLangMap = {
+	1 => { name: "", display: "Nothing" },
+	2 => { name: "react-ts", display: "react/typescript" }
+}
 
 puts "Project Name?"
 projectName = gets.chomp
@@ -35,27 +45,40 @@ while not prefix =~ /^[A-Za-z][A-Za-z0-9]*$/
 	prefix = gets.chomp
 end
 
-puts "Api Language? Default: #{pythonConst}"
-apiLang = gets.chomp
+apiLangChoice = -1
+loop do
+	puts "Api Language? Default: 2) #{apiLangMap[pythonChoice][:display]}"
+	apiLangMap.keys.sort.each {|e| puts "#{e}) #{apiLangMap[e][:display]}"}
+	apiLangInput = gets.chomp
+	if apiLangInput.strip.empty?
+		apiLangChoice = pythonChoice
+	else
+		apiLangChoice = apiLangInput.to_i
+	end
+	break if apiLangMap.has_key?(apiLangChoice)
+	puts "#{apiLangInput} is invalid. Try again."
+end
 
-puts "Front end Language? Default: #{reactTsConst}"
-feLang = gets.chomp
+
+feLangChoice = -1
+loop do
+	puts "Select front end Language? Default: "\
+		"#{reactTsChoice}) #{feLangMap[reactTsChoice][:display]}"
+	feLangMap.keys.sort.each {|e| puts "#{e}) #{feLangMap[e][:display]}"}
+	feLangInput = gets.chomp
+	if feLangInput.strip.empty?
+		feLangChoice = reactTsChoice
+	else
+		feLangChoice = feLangInput.to_i
+	end
+	break if feLangMap.has_key?(feLangChoice)
+	puts "#{feLangInput} is invalid. Try again."
+end
 
 
 if prefix.strip.empty?
 	prefix = defaultPrefix
 end
-
-if apiLang.strip.empty?
-	apiLang = pythonConst
-end
-
-if feLang.strip.empty?
-	feLang = reactTsConst
-end
-
-apiLang = apiLang.strip.downcase
-feLang = feLang.strip.downcase
 
 
 lcPrefix = prefix.downcase
@@ -65,7 +88,7 @@ projectNameLc = projectName.downcase
 projectNameSnake = to_snake(projectName)
 projectNameFlat = to_flat(projectName)
 
-if apiLang == pythonConst
+if apiLangChoice == pythonChoice
 	db = "mysql"
 else
 	db = ""
@@ -80,8 +103,8 @@ choices = {
 	ucPrefix: ucPrefix,
 	lcPrefix: lcPrefix,
 	title: projectName,
-	apiLang: apiLang,
-	feLang: feLang,
+	apiLang: apiLangMap[apiLangChoice][:name],
+	feLang: feLangMap[feLangChoice][:name],
 	db: db
 }
 
@@ -165,11 +188,11 @@ copy_tpl(
 	"requirements.txt"
 )
 
-if apiLang == pythonConst
+if apiLangChoice == pythonChoice
 	AppGenPythons::generate(choices)
 end
 
-if feLang == reactTsConst
+if feLangChoice == reactTsChoice
 	AppGenReactTs::generate(choices)
 else
 	AppGenNoFramework::generate(choices)
