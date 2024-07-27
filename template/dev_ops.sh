@@ -9,20 +9,10 @@ __INCLUDE_COUNT__=$((__INCLUDE_COUNT__ + 1))
 export __INCLUDE_COUNT__
 
 
-track_exit_code() {
-	exitCode="$?"
-	if [ -z "$fnExitCode" ]; then
-		fnExitCode="$exitCode"
-	fi
-	((exit "$fnExitCode") || (exit "$exitCode"))
-	fnExitCode="$?"
-}
-
-
 install_package() (
 	pkgName="$1"
 	echo "Try to install --${pkgName}--"
-	case $(uname) in
+	case $(uname) in #()
 		(Linux*)
 			if which pacman >/dev/null 2>&1; then
 				yes | sudo -p 'Pass required for pacman install: ' \
@@ -31,10 +21,10 @@ install_package() (
 				sudo -p 'Pass required for apt-get install: ' \
 					DEBIAN_FRONTEND=noninteractive apt-get -y install "$pkgName"
 			fi
-			;;
+			;; #()
 		(Darwin*)
 			yes | brew install "$pkgName"
-			;;
+			;; #()
 		(*)
 			;;
 	esac
@@ -67,9 +57,10 @@ disable_wordsplitting() {
 str_contains() (
 	haystackStr="$1"
 	needleStr="$2"
-	case "$haystackStr" in
-		*"$needleStr"*)
+	case "$haystackStr" in #()
+		(*"$needleStr"*)
 			return 0
+			;;
 	esac
 	return 1
 )
@@ -82,12 +73,12 @@ array_contains() (
 	searchValue="$1"
 	shift
 	while [ ! -z "$1" ]; do
-		case $1 in
-			"$searchValue")
+		case $1 in #()
+			("$searchValue")
 				return 0
-				;;
-			*)
-			;;
+				;; #()
+			(*)
+			;; #()
 		esac
 		shift
 	done
@@ -187,12 +178,12 @@ empty_dir_contents() (
 
 get_bin_path() (
 	pkg="$1"
-	case $(uname) in
+	case $(uname) in #()
 		(Darwin*)
 			brew info "$pkg" \
 			| grep -A1 'has been installed as' \
 			| awk 'END{ print $1 }'
-			;;
+			;; #()
 		(*) which "$pkg" ;;
 	esac
 )
@@ -342,13 +333,13 @@ set_env_vars() {
 
 
 get_localhost_key_dir() (
-	case $(uname) in
+	case $(uname) in #()
 		(Darwin*)
 			echo "$HOME"/.ssh
-			;;
+			;; #()
 		(Linux*)
 			echo "$HOME"/.ssh
-			;;
+			;; #()
 		(*) ;;
 	esac
 )
@@ -433,7 +424,7 @@ __is_current_dir_repo__() {
 
 get_pkg_mgr() {
 	define_consts >&2
-	case $(uname) in
+	case $(uname) in #()
 		(Linux*)
 			if  which pacman >/dev/null 2>&1; then
 				echo "$<%= ucPrefix %>_PACMAN"
@@ -442,11 +433,11 @@ get_pkg_mgr() {
 				echo "$<%= ucPrefix %>_APT_CONST"
 				return 0
 			fi
-			;;
+			;; #()
 		(Darwin*)
 			echo "$<%= ucPrefix %>_HOMEBREW"
 			return 0
-			;;
+			;; #()
 		(*)
 			;;
 	esac
@@ -457,25 +448,36 @@ get_pkg_mgr() {
 brew_is_installed() (
 	pkg="$1"
 	echo "checking about $pkg"
-	case $(uname) in
+	case $(uname) in #()
 		(Darwin*)
 			brew info "$pkg" >/dev/null 2>&1 &&
 			! brew info "$pkg" | grep 'Not installed' >/dev/null
-			;;
+			;; #()
 		(*) return 0 ;;
 	esac
 )
 
 
+track_exit_code() {
+	exitCode="$?"
+	if [ -z "$fnExitCode" ]; then
+		fnExitCode="$exitCode"
+	fi
+	((exit "$fnExitCode") && (exit "$exitCode"))
+	fnExitCode="$?"
+	return "$exitCode"
+}
+
+
 __deployment_env_check_recommended__() {
 	#possibly problems if missing
 
-	[ -z "$<%= ucPrefix %>_LOCAL_REPO_DIR" ] &&
+	[ -n "$<%= ucPrefix %>_LOCAL_REPO_DIR" ] ||
 	echo 'environmental var <%= ucPrefix %>_LOCAL_REPO_DIR not set'
 <% if db == "mysql" %>
-	[ -z $(__get_db_setup_key__) ] &&
+	[ -n "$(__get_db_setup_key__)" ] ||
 	echo 'deployment var __DB_SETUP_PASS__ not set in keys'
-	[ -z $(__get_db_owner_key__) ] &&
+	[ -n "$(__get_db_owner_key__)" ] ||
 	echo 'deployment var <%= ucPrefix %>_DB_PASS_OWNER not set in keys'
 <% end %>
 }
@@ -483,40 +485,43 @@ __deployment_env_check_recommended__() {
 
 __deployment_env_check_required__() {
 	#definitely problems if missing
-	[ -z "$<%= ucPrefix %>_REPO_URL" ] &&
-	echo 'environmental var <%= ucPrefix %>_REPO_URL not set'
+	[ -n "$<%= ucPrefix %>_REPO_URL" ]
 	fnExitCode="$?"
-	track_exit_code
-	[ -z $(__get_domain_name__) ] &&
+	track_exit_code ||
+	echo 'environmental var <%= ucPrefix %>_REPO_URL not set'
+	[ -n "$(__get_domain_name__)" ]
+	track_exit_code ||
 	echo 'top level domain for app has not been set. Check __get_domain_name__'
-	track_exit_code
 
 	#values for ssh'ing to server
-	[ -z $(__get_id_file__) ] &&
+	[ -n "$(__get_id_file__)" ]
+	track_exit_code ||
 	echo 'deployment var <%= ucPrefix %>_SERVER_KEY_FILE not set in keys'
-	track_exit_code
-	[ -z $(__get_address__) ] &&
+	[ -n "$(__get_address__)" ]
+	track_exit_code ||
 	echo 'deployment var <%= ucPrefix %>_SERVER_SSH_ADDRESS not set in keys'
-	track_exit_code
 
 	#porkbun
-	[ -z $(__get_pb_api_key__) ] &&
+	[ -n "$(__get_pb_api_key__)" ]
+	track_exit_code ||
 	echo 'deployment var PB_API_KEY not set in keys'
-	track_exit_code
-	[ -z $(__get_pb_secret__) ] &&
+	[ -n "$(__get_pb_secret__)" ]
+	track_exit_code ||
 	echo 'deployment var PB_SECRET not set in keys'
-	track_exit_code
 
 	#for encrypting app token
-	[ -z $(__get_<%= lcPrefix %>_auth_key__) ] &&
+	[ -n "$(__get_api_auth_key__)" ]
+	track_exit_code ||
 	echo 'deployment var <%= ucPrefix %>_AUTH_SECRET_KEY not set in keys'
-	track_exit_code
+	[ -n "$(__get_namespace_uuid__)" ]
+	track_exit_code ||
+	echo 'deployment var <%= ucPrefix %>_NAMESPACE_UUID not set in keys'
 
 <% if db == "mysql" %>
 	#db
-	[ -z $(__get_api_db_user_key__) ] &&
+	[ -n "$(__get_api_db_user_key__)" ]
+	track_exit_code ||
 	echo 'deployment var <%= ucPrefix %>_DB_PASS_API not set in keys'
-	track_exit_code
 	return "$fnExitCode"
 <% end %>
 }
@@ -531,12 +536,12 @@ deployment_env_check() (
 
 __server_env_check_recommended__() {
 	#possibly problems if missing
-	[ -z "$<%= ucPrefix %>_LOCAL_REPO_DIR" ] &&
+	[ -n "$<%= ucPrefix %>_LOCAL_REPO_DIR" ] ||
 	echo 'environmental var <%= ucPrefix %>_LOCAL_REPO_DIR not set'
 <% if db == "mysql" %>
-	[ -z "$__DB_SETUP_PASS__" ] &&
+	[ -n "$__DB_SETUP_PASS__" ] ||
 	echo 'environmental var __DB_SETUP_PASS__ not set in keys'
-	[ -z "$<%= ucPrefix %>_DB_PASS_OWNER" ] &&
+	[ -n "$<%= ucPrefix %>_DB_PASS_OWNER" ] ||
 	echo 'environmental var <%= ucPrefix %>_DB_PASS_OWNER not set in keys'
 <% end %>
 }
@@ -544,33 +549,36 @@ __server_env_check_recommended__() {
 
 __server_env_check_required__() {
 	#definitely problems if missing
-	[ -z "$<%= ucPrefix %>_REPO_URL" ] &&
-	echo 'environmental var <%= ucPrefix %>_REPO_URL not set'
+	[ -z "$<%= ucPrefix %>_REPO_URL" ]
 	fnExitCode="$?"
-	track_exit_code
+	track_exit_code ||
+	echo 'environmental var <%= ucPrefix %>_REPO_URL not set'
 
-	[ -z $(__get_domain_name__) ] &&
+	[ -n "$(__get_domain_name__)" ]
+	track_exit_code ||
 	echo 'top level domain for app has not been set. Check __get_domain_name__'
-	track_exit_code
 
 	#porkbun
-	[ -z "$PB_API_KEY" ] &&
+	[ -n "$PB_API_KEY" ]
+	track_exit_code ||
 	echo 'environmental var PB_API_KEY not set'
-	track_exit_code
-	[ -z "$PB_SECRET" ] &&
+	[ -n "$PB_SECRET" ]
+	track_exit_code ||
 	echo 'environmental var PB_SECRET not set'
-	track_exit_code
 
 	#for encrypting app token
-	[ -z "$<%= ucPrefix %>_AUTH_SECRET_KEY" ] &&
+	[ -n "$<%= ucPrefix %>_AUTH_SECRET_KEY" ]
+	track_exit_code ||
 	echo 'environmental var <%= ucPrefix %>_AUTH_SECRET_KEY not set'
-	track_exit_code
+	[ -n "<%= ucPrefix %>_NAMESPACE_UUID" ]
+	track_exit_code ||
+	echo 'deployment var <%= ucPrefix %>_NAMESPACE_UUID not set in keys'
 
 <% if db == "mysql" %>
 	#db
-	[ -z "$<%= ucPrefix %>_DB_PASS_API" ] &&
+	[ -n "$<%= ucPrefix %>_DB_PASS_API" ]
+	track_exit_code ||
 	echo 'environmental var <%= ucPrefix %>_DB_PASS_API not set'
-	track_exit_code
 <% end %>
 	return "$fnExitCode"
 }
@@ -584,12 +592,12 @@ server_env_check() (
 
 __dev_env_check_recommended__() {
 	#possibly problems if missing
-	[ -z "$BOT_REPO_URL" ] &&
-	echo 'environmental var BOT_REPO_URL not set'
+	[ -n "$<%= ucPrefix %>_REPO_URL" ] ||
+	echo 'environmental var <%= ucPrefix %>_REPO_URL not set'
 <% if db == "mysql" %>
-	[ -z "$__DB_SETUP_PASS__" ] &&
+	[ -n "$__DB_SETUP_PASS__" ] ||
 	echo 'environmental var __DB_SETUP_PASS__ not set in keys'
-	[ -z "$<%= ucPrefix %>_DB_PASS_OWNER" ] &&
+	[ -n "$<%= ucPrefix %>_DB_PASS_OWNER" ] ||
 	echo 'environmental var <%= ucPrefix %>_DB_PASS_OWNER not set in keys'
 <% end %>
 }
@@ -597,30 +605,32 @@ __dev_env_check_recommended__() {
 
 __dev_env_check_required__() {
 	#definitely problems if missing
-	[ -z "$<%= ucPrefix %>_LOCAL_REPO_DIR" ] &&
+	[ -n "$<%= ucPrefix %>_LOCAL_REPO_DIR" ]
+	fnExitCode="$?"
+	track_exit_code ||
 	echo 'environmental var <%= ucPrefix %>_LOCAL_REPO_DIR not set'
-	fnExitCode="$?"
-	track_exit_code
 
-	[ -z $(__get_domain_name__) ] &&
+	[ -n "$(__get_domain_name__)" ]
+	track_exit_code ||
 	echo 'top level domain for app has not been set. Check __get_domain_name__'
-	track_exit_code
 
-	[ -z "$<%= ucPrefix %>_ENV" ] &&
+	[ -n "$<%= ucPrefix %>_ENV" ]
+	track_exit_code ||
 	echo 'environmental var <%= ucPrefix %>_ENV not set'
-	fnExitCode="$?"
-	track_exit_code
 <% if db == "mysql" %>
 	#db
-	[ -z "$<%= ucPrefix %>_DB_PASS_API" ] &&
+	[ -n "$<%= ucPrefix %>_DB_PASS_API" ]
+	track_exit_code ||
 	echo 'environmental var <%= ucPrefix %>_DB_PASS_API not set'
-	track_exit_code
 <% end %>
 
 	#for encrypting app token
-	[ -z "$<%= ucPrefix %>_AUTH_SECRET_KEY" ] &&
+	[ -n "$<%= ucPrefix %>_AUTH_SECRET_KEY" ]
+	track_exit_code ||
 	echo 'environmental var <%= ucPrefix %>_AUTH_SECRET_KEY not set'
-	track_exit_code
+	[ -n "<%= ucPrefix %>_NAMESPACE_UUID" ]
+	track_exit_code ||
+	echo 'deployment var <%= ucPrefix %>_NAMESPACE_UUID not set in keys'
 
 	return "$fnExitCode"
 }
@@ -687,12 +697,22 @@ __get_pb_secret__() (
 )
 
 
-__get_<%= lcPrefix %>_auth_key__() (
+__get_api_auth_key__() (
 	if [ -n "$<%= ucPrefix %>_AUTH_SECRET_KEY" ] && [ "$<%= ucPrefix %>_ENV" != 'local' ]; then
 		echo "$<%= ucPrefix %>_AUTH_SECRET_KEY"
 		return
 	fi
 	perl -ne 'print "$1\n" if /<%= ucPrefix %>_AUTH_SECRET_KEY=(\w+)/' \
+		"$(__get_app_root__)"/keys/"$<%= ucPrefix %>_PROJ_NAME_SNAKE"
+)
+
+
+__get_namespace_uuid__() (
+	if [ -n "$<%= ucPrefix %>_NAMESPACE_UUID" ] && [ "$<%= ucPrefix %>_ENV" != 'local' ]; then
+		echo "$<%= ucPrefix %>_NAMESPACE_UUID"
+		return
+	fi
+	perl -ne 'print "$1\n" if /<%= ucPrefix %>_NAMESPACE_UUID=([\w\-]+)/' \
 		"$(__get_app_root__)"/keys/"$<%= ucPrefix %>_PROJ_NAME_SNAKE"
 )
 
@@ -737,6 +757,7 @@ __get_db_owner_key__() (
 )
 <% end %>
 
+
 __get_api_db_user_key__() (
 	if [ -n "$<%= ucPrefix %>_DB_PASS_API" ] && [ "$<%= ucPrefix %>_ENV" != 'local' ]; then
 		echo "$<%= ucPrefix %>_DB_PASS_API"
@@ -748,17 +769,17 @@ __get_api_db_user_key__() (
 
 
 __get_remote_private_key__() (
-	echo "/etc/ssl/private/${<%= ucPrefix %>_PROJ_NAME_0}.private.key.pem"
+	echo "/etc/ssl/private/${<%= ucPrefix %>_PROJ_NAME_SNAKE}.private.key.pem"
 )
 
 
 __get_remote_public_key__() (
-	echo "/etc/ssl/certs/${<%= ucPrefix %>_PROJ_NAME_0}.public.key.pem"
+	echo "/etc/ssl/certs/${<%= ucPrefix %>_PROJ_NAME_SNAKE}.public.key.pem"
 )
 
 
 __get_remote_intermediate_key__() (
-	echo "/etc/ssl/certs/${<%= ucPrefix %>_PROJ_NAME_0}.intermediate.key.pem"
+	echo "/etc/ssl/certs/${<%= ucPrefix %>_PROJ_NAME_SNAKE}.intermediate.key.pem"
 )
 
 
@@ -863,11 +884,11 @@ link_app_python_if_not_linked() {
 		if [ ! -e "$(__get_app_root__)"/"$<%= ucPrefix %>_BIN_DIR" ]; then
 			sudo_mkdir "$(__get_app_root__)"/"$<%= ucPrefix %>_BIN_DIR" || return "$?"
 		fi
-		case $(uname) in
+		case $(uname) in #()
 			(Darwin*)
 				ln -sf $(get_bin_path python@3.9) \
 					"$(__get_app_root__)"/"$<%= ucPrefix %>_BIN_DIR"/<%= lcPrefix %>-python
-				;;
+				;; #()
 			(*)
 				ln -sf $(get_bin_path python3) \
 					"$(__get_app_root__)"/"$<%= ucPrefix %>_BIN_DIR"/<%= lcPrefix %>-python
@@ -920,6 +941,9 @@ setup_env_api_file() (
 	perl -pi -e \
 		"s@^(<%= ucPrefix %>_TEST_ROOT=).*\$@\1'${<%= ucPrefix %>_TEST_ROOT}'@" \
 		"$envFile" &&
+	perl -pi -e \
+		"s@^(<%= ucPrefix %>_NAMESPACE_UUID=).*\$@\1'${<%= ucPrefix %>_NAMESPACE_UUID}'@" \
+		"$envFile" &&
 	echo 'done setting up .env file'
 )
 
@@ -946,19 +970,19 @@ setup_db() (
 
 start_db_service() (
 	echo 'starting database service'
-	case $(uname) in
+	case $(uname) in #()
 		(Linux*)
 			if ! systemctl is-active --quiet mariadb; then
 				sudo -p 'enabling mariadb' 'systemctl enable mariadb'
 				sudo -p 'starting mariadb' 'systemctl start mariadb'
 			fi
-			;;
+			;; #()
 		(Darwin*)
 			status=brew services list | grep mariadb | awk '{ print $2 }'
 			if [ status = 'none' ]; then
 				brew services start mariadb
 			fi
-			;;
+			;; #()
 		(*) ;;
 	esac &&
 	echo 'done starting database service'
@@ -985,7 +1009,7 @@ set_db_root_initial_password() (
 setup_database() (
 	echo 'initial db setup'
 	process_global_vars "$@" &&
-	copy_dir "$<%= ucPrefix %>_SQL_SCRIPTS_SRC" "$(__get_app_root__)"/"$<%= ucPrefix %>_SQL_SCRIPTS_DEST" &&
+	__replace_sql_script__ &&
 <% if apiLang == "python" %>
 	__install_py_env_if_needed__ &&
 	. "$(__get_app_root__)"/"$<%= ucPrefix %>_TRUNK"/"$<%= ucPrefix %>_PY_ENV"/bin/activate &&
@@ -1005,7 +1029,7 @@ from <%= projectNameSnake %>.services import (
 	DbRootConnectionService,
 	DbOwnerConnectionService
 )
-dbName="<%= projectNameLc %>_db"
+dbName="<%= projectNameSnake %>_db"
 with DbRootConnectionService() as rootConnService:
 	rootConnService.create_db(dbName)
 	rootConnService.create_owner()
@@ -1120,11 +1144,11 @@ scan_pems_for_common_name() (
 
 certs_matching_name() (
 	commonName="$1"
-		case $(uname) in
+		case $(uname) in #()
 		(Darwin*)
 			security find-certificate -a -p -c "$commonName" \
 				$(__get_keychain_osx__)
-			;;
+			;; #()
 		(*)
 			scan_pems_for_common_name "$commonName"
 			;;
@@ -1141,13 +1165,13 @@ __certs_matching_name_exact__() (
 
 
 __get_openssl_default_conf__() (
-	case $(uname) in
+	case $(uname) in #()
 		(Darwin*)
 			echo '/System/Library/OpenSSL/openssl.cnf'
-			;;
+			;; #()
 		(Linux*)
 			echo '/etc/ssl/openssl.cnf'
-			;;
+			;; #()
 		(*) ;;
 	esac
 )
@@ -1258,7 +1282,7 @@ __clean_up_invalid_cert__() (
 	commonName="$1" &&
 	certName="$2" &&
 	echo "Clean up certs for ${commonName} if needed"
-	case $(uname) in
+	case $(uname) in #()
 		(Darwin*)
 			cert=''
 			#turns out the d flag is not posix compliant :<
@@ -1307,13 +1331,13 @@ __setup_ssl_cert_local__() (
 	publicKeyFile="$3" &&
 	privateKeyFile="$4" &&
 
-	case $(uname) in
+	case $(uname) in #()
 		(Darwin*)
 			__openssl_gen_cert__ "$commonName" "$domain" \
 				"$publicKeyFile" "$privateKeyFile" &&
 			__install_local_cert_osx__ "$publicKeyFile" ||
 			return 1
-			;;
+			;; #()
 		(*)
 			if [ -f '/etc/debian_version' ]; then
 				__openssl_gen_cert__ "$commonName" "$domain" \
@@ -1347,7 +1371,7 @@ print_ssl_cert_info() (
 	process_global_vars "$@" &&
 	domain=$(__get_domain_name__ "$<%= ucPrefix %>_ENV" 'omitPort') &&
 	echo "$domain"
-	case "$<%= ucPrefix %>_ENV" in
+	case "$<%= ucPrefix %>_ENV" in #()
 		(local*)
 			isDebugServer=${1#is_debug_server=}
 			if [ -n "$isDebugServer" ]; then
@@ -1378,7 +1402,7 @@ print_ssl_cert_info() (
 							cert=''
 						fi
 					done
-			;;
+			;; #()
 		(*)
 			publicKeyFile=$(__get_remote_public_key__) &&
 			cat "$publicKeyFile" | openssl x509 -enddate -subject -noout
@@ -1403,7 +1427,8 @@ add_test_url_to_hosts() (
 setup_ssl_cert_nginx() (
 	process_global_vars "$@" &&
 	domain=$(__get_domain_name__ "$<%= ucPrefix %>_ENV" 'omitPort') &&
-	case "$<%= ucPrefix %>_ENV" in
+		echo "setting up certs for ${domain}" &&
+	case "$<%= ucPrefix %>_ENV" in #()
 		(local*)
 			add_test_url_to_hosts "$domain"
 			publicKeyFile=$(__get_local_nginx_cert_path__).public.key.crt &&
@@ -1412,12 +1437,13 @@ setup_ssl_cert_nginx() (
 			# we're leaving off the && because what would that even mean here?
 			__clean_up_invalid_cert__ "$domain" $(__get_local_nginx_cert_name__)
 			if [ -z $(__certs_matching_name_exact__ "$domain") ]; then
+				echo 'setting up new certs'
 				__setup_ssl_cert_local__ \
 				"$domain" "$domain" "$publicKeyFile" "$privateKeyFile"
 			fi
 			publicKeyName=$(__get_local_nginx_cert_name__).public.key.crt &&
 			__set_firefox_cert_policy__ "$publicKeyName"
-			;;
+			;; #()
 		(*)
 			publicKeyFile=$(__get_remote_public_key__) &&
 			privateKeyFile=$(__get_remote_private_key__) &&
@@ -1547,10 +1573,10 @@ update_nginx_conf() (
 	appConfFile="$1"
 	error_check_all_paths "$<%= ucPrefix %>_TEMPLATES_SRC" "$appConfFile" &&
 	__copy_and_update_nginx_template__ &&
-	case "$<%= ucPrefix %>_ENV" in
+	case "$<%= ucPrefix %>_ENV" in #()
 		(local*)
 			__set_local_nginx_app_conf__
-			;;
+			;; #()
 		(*)
 			__set_deployed_nginx_app_conf__
 			;;
@@ -1612,18 +1638,18 @@ enable_nginx_include() (
 
 restart_nginx() (
 	echo 'starting/restarting up nginx'
-	case $(uname) in
+	case $(uname) in #()
 		(Darwin*)
 			nginx -s reload
-			;;
+			;; #()
 		(Linux*)
 			if systemctl is-active --quiet nginx; then
-				sudo -p 'starting nginx' systemctl restart nginx
+				sudo -p 'starting nginx. Need pass:' systemctl restart nginx
 			else
-				sudo -p 'enabling nginx' systemctl enable nginx
-				sudo -p 'restarting nginx' systemctl start nginx
+				sudo -p 'enabling nginx.  Need pass:' systemctl enable nginx
+				sudo -p 'restarting nginx.  Need pass:' systemctl start nginx
 			fi
-			;;
+			;; #()
 		(*) ;;
 	esac &&
 	echo 'Done starting/restarting up nginx'
@@ -1640,7 +1666,7 @@ print_nginx_conf_location() (
 	process_global_vars "$@" >/dev/null &&
 	confDirInclude=$(get_nginx_conf_dir_include) &&
 	confDir=$(get_abs_path_from_nginx_include "$confDirInclude") 2>/dev/null
-	echo "$confDir"/"$<%= ucPrefix %>".conf
+	echo "$confDir"/"$<%= ucPrefix %>_APP".conf
 )
 
 
@@ -1697,7 +1723,8 @@ __get_remote_export_script__() (
 	output="${output} export PB_SECRET='$(__get_pb_secret__)';" &&
 	output="${output} export PB_API_KEY='$(__get_pb_api_key__)';" &&
 <% if db == "mysql" %>
-	output="${output} export <%= ucPrefix %>_AUTH_SECRET_KEY='$(__get_<%= lcPrefix %>_auth_key__)';" &&
+	output="${output} export <%= ucPrefix %>_AUTH_SECRET_KEY='$(__get_api_auth_key__)';" &&
+	output="${output} export <%= ucPrefix %>_NAMESPACE_UUID='$(__get_namespace_uuid__)';" &&
 	output="${output} export <%= ucPrefix %>_DATABASE_NAME='<%= projectNameLc %>_db';" &&
 	output="${output} export __DB_SETUP_PASS__='$(__get_db_setup_key__)';" &&
 	output="${output} export <%= ucPrefix %>_DB_PASS_OWNER='$(__get_db_owner_key__)';" &&
@@ -1760,7 +1787,7 @@ setup_api() (
 
 
 create_swap_if_needed() (
-		case $(uname) in
+		case $(uname) in #()
 		(Linux*)
 			if [ ! -e /swapfile ]; then
 				sudo dd if=/dev/zero of=/swapfile bs=128M count=24 &&
@@ -1768,7 +1795,7 @@ create_swap_if_needed() (
 				sudo mkswap /swapfile &&
 				sudo swapon /swapfile
 			fi
-			;;
+			;; #()
 		(*) ;;
 	esac
 )
@@ -1835,7 +1862,7 @@ get_hash_of_file() (
 	file="$1"
 	pyScript=$(cat <<-END
 		import sys, hashlib
-		print(hashlib.md5(sys.stdin.read().encode("utf-8")).hexdigest())
+		print(hashlib.sha256(sys.stdin.read().encode("utf-8")).hexdigest())
 	END
 	)
 	cat "$file" | python3 -c "$pyScript"
@@ -1873,11 +1900,14 @@ regen_file_reference_file() (
 )
 <% end %>
 
+__replace_sql_script__() {
+	copy_dir "$<%= ucPrefix %>_SQL_SCRIPTS_SRC" "$(__get_app_root__)"/"$<%= ucPrefix %>_SQL_SCRIPTS_DEST"
+}
 
 replace_sql_script() (
 	process_global_vars "$@" &&
 	setup_app_directories
-	copy_dir "$<%= ucPrefix %>_SQL_SCRIPTS_SRC" "$(__get_app_root__)"/"$<%= ucPrefix %>_SQL_SCRIPTS_DEST"
+	__replace_sql_script__
 )
 
 
@@ -1891,13 +1921,12 @@ setup_unit_test_env() (
 	export __TEST_FLAG__='true'
 	publicKeyFile=$(__get_debug_cert_path__).public.key.crt
 
-	__create_fake_keys_file__
 	setup_app_directories
+	__create_fake_keys_file__
 
 <% if apiLang == "python" %>
 	copy_dir "$<%= ucPrefix %>_TEMPLATES_SRC" "$(__get_app_root__)"/"$<%= ucPrefix %>_TEMPLATES_DEST" &&
-	copy_dir "$<%= ucPrefix %>_SQL_SCRIPTS_SRC" \
-		"$(__get_app_root__)"/"$<%= ucPrefix %>_SQL_SCRIPTS_DEST" &&
+	__replace_sql_script__
 	sync_requirement_list
 	setup_env_api_file
 	pyEnvPath="$(__get_app_root__)"/"$<%= ucPrefix %>_TRUNK"/"$<%= ucPrefix %>_PY_ENV"
@@ -1926,7 +1955,7 @@ run_unit_tests() (
 	setup_unit_test_env >/dev/null &&
 <% if apiLang == "python" %>
 	test_src="$<%= ucPrefix %>_SRC"/tests &&
-	export <%= ucPrefix %>_AUTH_SECRET_KEY=$(__get_<%= lcPrefix %>_auth_key__) &&
+	export <%= ucPrefix %>_AUTH_SECRET_KEY=$(__get_api_auth_key__) &&
 	export PYTHONPATH="${<%= ucPrefix %>_SRC}:${<%= ucPrefix %>_SRC}/api" &&
 	. "$(__get_app_root__)"/"$<%= ucPrefix %>_TRUNK"/"$<%= ucPrefix %>_PY_ENV"/bin/activate &&
 	cd "$test_src"
@@ -1945,13 +1974,13 @@ debug_print() (
 
 
 get_rc_candidate() {
-	case $(uname) in
+	case $(uname) in #()
 		(Linux*)
 			echo "$HOME"/.bashrc
-			;;
+			;; #()
 		(Darwin*)
 			echo "$HOME"/.zshrc
-			;;
+			;; #()
 		(*) ;;
 	esac
 }
@@ -1971,15 +2000,15 @@ get_web_root() (
 		echo "$<%= ucPrefix %>_TEST_ROOT"
 		return
 	fi
-	case $(uname) in
+	case $(uname) in #()
 		(Linux*)
 			echo "${<%= ucPrefix %>_WEB_ROOT_OVERRIDE:-/srv}"
 			return
-			;;
+			;; #()
 		(Darwin*)
 			echo "${<%= ucPrefix %>_WEB_ROOT_OVERRIDE:-/Library/WebServer}"
 			return
-			;;
+			;; #()
 		(*) ;;
 	esac
 )
@@ -2008,45 +2037,45 @@ process_global_args() {
 	#in case need to pass the args to a remote script. example
 	__GLOBAL_ARGS__=''
 	while [ ! -z "$1" ]; do
-		case "$1" in
+		case "$1" in #()
 			#build out to test_trash rather than the normal directories
 			#sets <%= ucPrefix %>_APP_ROOT and <%= ucPrefix %>_WEB_ROOT_OVERRIDE
 			#without having to set them explicitly
 			(test)
 				export __TEST_FLAG__='true'
 				__GLOBAL_ARGS__="${__GLOBAL_ARGS__} test"
-				;;
+				;; #()
 			(replace=*)
 				export __REPLACE__=${1#replace=}
 				__GLOBAL_ARGS__="${__GLOBAL_ARGS__} replace='${__REPLACE__}'"
-				;;
+				;; #()
 			(clean) #tells setup functions to delete files/dirs before installing
 				export __CLEAN_FLAG='clean'
 				__GLOBAL_ARGS__="${__GLOBAL_ARGS__} clean"
-				;;
+				;; #()
 			#activates debug_print. Also tells deploy script to use the diag branch
 			(diag)
 				export __DIAG_FLAG__='true'
 				__GLOBAL_ARGS__="${__GLOBAL_ARGS__} diag"
 				echo '' > diag_out_"$__INCLUDE_COUNT__"
-				;;
+				;; #()
 			(setuplvl=*) #affects which setup scripst to run
 				export __SETUP_LVL__=${1#setuplvl=}
 				__GLOBAL_ARGS__="${__GLOBAL_ARGS__} setuplvl='${__SETUP_LVL__}'"
-				;;
+				;; #()
 			#when I want to conditionally run with some experimental code
 			(experiment=*)
 				export __EXPERIMENT_NAME__=${1#experiment=}
 				__GLOBAL_ARGS__="${__GLOBAL_ARGS__} experiment='${__EXPERIMENT_NAME__}'"
-				;;
+				;; #()
 			(skip=*)
 				export __SKIP__=${1#skip=}
 				__GLOBAL_ARGS__="${__GLOBAL_ARGS__} skip='${__SKIP__}'"
-				;;
+				;; #()
 			(dbsetuppass=*)
 				export __DB_SETUP_PASS__=${1#dbsetuppass=}
 				__GLOBAL_ARGS__="${__GLOBAL_ARGS__} dbsetuppass='${__DB_SETUP_PASS__}'"
-				;;
+				;; #()
 			(*) ;;
 		esac
 		shift
@@ -2120,14 +2149,14 @@ __get_domain_name__() (
 		echo "tld has been setup for this app yet" >&2
 		echo ""
 	fi
-	case "$envArg" in
+	case "$envArg" in #()
 		(local*)
 			if [ -n "$omitPort" ]; then
 				urlSuffix="-local.${tld}"
 			else
 				urlSuffix="-local.${tld}:8080"
 			fi
-			;;
+			;; #()
 		(*)
 			urlSuffix=".${tld}"
 			;;
@@ -2142,7 +2171,7 @@ define_repo_paths() {
 	export <%= ucPrefix %>_API_SRC="$<%= ucPrefix %>_SRC/api"
 	export <%= ucPrefix %>_CLIENT_SRC="$<%= ucPrefix %>_SRC/client"
 	export <%= ucPrefix %>_LIB_SRC="$<%= ucPrefix %>_SRC/$<%= ucPrefix %>_LIB"
-	export <%= ucPrefix %>_DEV_OPS_LIB_SRC="$<%= ucPrefix %>_SRC/$<%= ucPrefix %>_DEV_OPS_LIB"
+	export <%= ucPrefix %>_DEV_OPS_LIB_SRC="$(get_repo_path)/$<%= ucPrefix %>_DEV_OPS_LIB"
 	export <%= ucPrefix %>_TEMPLATES_SRC="$(get_repo_path)/templates"
 	export <%= ucPrefix %>_SQL_SCRIPTS_SRC="$(get_repo_path)/sql_scripts"
 	export <%= ucPrefix %>_REFERENCE_SRC="$(get_repo_path)/reference"
@@ -2169,16 +2198,17 @@ setup_app_directories() {
 
 __setup_api_dir__() {
 	if [ !  -e "$(get_web_root)"/"$<%= ucPrefix %>_API_DEST" ]; then
-	{
 		sudo -p 'Pass required to create web server directory: ' \
 			mkdir -pv "$(get_web_root)"/"$<%= ucPrefix %>_API_DEST" ||
 		show_err_and_return "Could not create $(get_web_root)/${<%= ucPrefix %>_API_DEST}"
-	}
+	fi
 }
 
 
 define_directory_vars() {
 	[ -z "$__DIRECTORY_VARS_SET__" ] || return 0
+	#the reason this  sorta works is because get_repo_path
+	#falls back to a somewhat reliable default
 	export <%= ucPrefix %>_LOCAL_REPO_DIR=$(get_repo_path) &&
 	define_repo_paths
 	export __DIRECTORY_VARS_SET__='true'
@@ -2202,6 +2232,7 @@ unset_globals() {
 	exceptions=$(tr '\n' ' '<<-'EOF'
 		<%= ucPrefix %>_ENV
 		<%= ucPrefix %>_AUTH_SECRET_KEY
+		<%= ucPrefix %>_NAMESPACE_UUID
 		<%= ucPrefix %>_DB_PASS_API
 		<%= ucPrefix %>_DB_PASS_OWNER
 		<%= ucPrefix %>_LOCAL_REPO_DIR
@@ -2219,15 +2250,15 @@ unset_globals() {
 					echo "leaving $constant"
 					continue
 				fi
-				case "$constant" in
+				case "$constant" in #()
 					(<%= ucPrefix %>_*)
 						echo "unsetting ${constant}"
 						unset "$constant"
-						;;
+						;; #()
 					(__*)
 						echo "unsetting ${constant}"
 						unset "$constant"
-						;;
+						;; #()
 					(*)
 						;;
 					esac

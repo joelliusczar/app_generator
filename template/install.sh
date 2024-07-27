@@ -22,12 +22,12 @@ curl -V || show_err_and_exit "curl is somehow not installed"
 
 
 
-case $(uname) in
+case $(uname) in #()
 	(Linux*)
 		if [ "$pkgMgrChoice" = "$<%= ucPrefix %>_APT_CONST" ] && [ "$expName" != 'py3.8' ]; then
 			sudo apt-get update
 		fi
-		;;
+		;; #()
 	(Darwin*)
 		if ! brew --version 2>/dev/null; then
 			#-f = -fail - fails quietly, i.e. no error page ...I think?
@@ -37,7 +37,7 @@ case $(uname) in
 			/bin/bash -c "$(curl -fsSL \
 				https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 		fi
-		;;
+		;; #()
 	(*) ;;
 esac
 
@@ -60,7 +60,7 @@ output_env_vars
 echo '##### python #####'
 if ! <%= lcPrefix %>-python -V 2>/dev/null || ! is_python_version_good; then
 	pythonToLink='python3'
-	case $(uname) in
+	case $(uname) in #()
 		(Linux*)
 			if ! python3 -V 2>/dev/null; then
 				install_package python3
@@ -69,7 +69,7 @@ if ! <%= lcPrefix %>-python -V 2>/dev/null || ! is_python_version_good; then
 				install_package python3.9 &&
 				pythonToLink='python3.9'
 			fi
-			;;
+			;; #()
 		(Darwin*)
 			#want to install python thru homebrew bc the default version on mac
 			#is below what we want
@@ -77,7 +77,7 @@ if ! <%= lcPrefix %>-python -V 2>/dev/null || ! is_python_version_good; then
 				install_package python@3.9
 			fi
 			pythonToLink='python@3.9'
-			;;
+			;; #()
 		(*) ;;
 	esac &&
 	ln -sf $(get_bin_path "$pythonToLink") \
@@ -137,15 +137,15 @@ fi
 echo '##### mariadb #####'
 if ! mariadb -V 2>/dev/null; then
 	if [ -n "$__DB_SETUP_PASS__" ]; then
-		case $(uname) in
+		case $(uname) in #()
 			(Linux*)
 				if [ "$pkgMgrChoice" = "$<%= ucPrefix %>_APT_CONST" ]; then
 					install_package mariadb-server
 				fi
-				;;
+				;; #()
 			(Darwin*)
 				install_package mariadb
-				;;
+				;; #()
 			(*) ;;
 		esac &&
 		sudo -p 'Updating db root password' mysql -u root -e \
@@ -170,40 +170,40 @@ fi
 
 
 echo '##### openssl #####'
-case $(uname) in
+case $(uname) in #()
 	(Linux*)
 		if [ "$pkgMgrChoice" = "$<%= ucPrefix %>_APT_CONST" ]; then
 			if ! openssl version 2>/dev/null; then
 				install_package openssl
 			fi
 		fi
-		;;
+		;; #()
 	(*) ;;
 esac
 
 echo '##### ca certificates #####'
-case $(uname) in
+case $(uname) in #()
 	(Linux*)
 		if [ "$pkgMgrChoice" = "$<%= ucPrefix %>_APT_CONST" ]; then
 			if ! dpkg -s ca-certificates 2>/dev/null; then
 				install_package ca-certificates
 			fi
 		fi
-		;;
+		;; #()
 	(*) ;;
 esac
 
 echo '##### nginx #####'
 if ! nginx -v 2>/dev/null; then
-	case $(uname) in
+	case $(uname) in #()
 		(Darwin*)
 			install_package nginx
-			;;
+			;; #()
 		(Linux*)
 			if [ "$pkgMgrChoice" = "$<%= ucPrefix %>_APT_CONST" ]; then
 				install_package nginx-full
 			fi
-			;;
+			;; #()
 		(*) ;;
 	esac
 fi
