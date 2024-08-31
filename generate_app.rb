@@ -15,7 +15,8 @@ reactTsChoice = 2
 
 apiLangMap = {
 	1 => { name: "", display: "Nothing" },
-	2 => { name: "python", display: "Python 3" }
+	2 => { name: "python", display: "Python 3" },
+	3 => { name: "csharp", display: "C#" }
 }
 
 feLangMap = {
