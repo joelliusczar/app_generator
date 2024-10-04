@@ -185,6 +185,11 @@ copy_tpl(
 )
 
 copy_tpl(
+	"dev_ops_libs/python/regen_file_reference_file/__main__.py",
+	"#{projectNameSnake}_dev_ops/regen_file_reference_file/__main__.py"
+)
+
+copy_tpl(
 	"requirements.txt",
 	"requirements.txt"
 )

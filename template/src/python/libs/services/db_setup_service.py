@@ -67,6 +67,16 @@ class DbRootConnectionService:
 			dbPass
 		)
 
+		dbPass = EnvManager.db_pass_janitor()
+		if not dbPass:
+			raise RuntimeError("The system is not configured correctly for that.")
+		self.create_db_user(
+			DbUsers.JANITOR_USER.value,
+			"localhost",
+			dbPass
+		)
+
+
 
 	def create_owner(self):
 		dbPass = EnvManager.db_pass_owner()
@@ -104,6 +114,7 @@ class DbRootConnectionService:
 		self.conn.exec_driver_sql(
 			f"REVOKE ALL PRIVILEGES, GRANT OPTION "
 			f"FROM {DbUsers.API_USER.format_user()}, "
+			f"{DbUsers.JANITOR_USER.format_user()}, "
 			f"{DbUsers.OWNER_USER.format_user()}"
 		)
 
@@ -153,5 +164,28 @@ class DbOwnerConnectionService:
 		self.conn.exec_driver_sql(script)
 		self.conn.exec_driver_sql("FLUSH PRIVILEGES")
 
+	def grant_janitor_roles(self):
+		template = TemplateService.load_sql_script_content(
+			SqlScripts.GRANT_JANITOR
+		)
+		if not is_db_name_safe(self.dbName):
+			raise RuntimeError("Invalid name was used")
+		script = template.replace("<dbName>", self.dbName)\
+			.replace("<janitorUser>", DbUsers.JANITOR_USER("localhost"))
+		self.conn.exec_driver_sql(script)
+		self.conn.exec_driver_sql("FLUSH PRIVILEGES")
+
 	def create_tables(self):
 		metadata.create_all(self.conn.engine)
+
+def setup_database(dbName: str):
+	with DbRootConnectionService() as rootConnService:
+		rootConnService.create_db(dbName)
+		rootConnService.create_owner()
+		rootConnService.create_app_users()
+		rootConnService.grant_owner_roles(dbName)
+
+	with DbOwnerConnectionService(dbName, echo=False) as ownerConnService:
+		ownerConnService.create_tables()
+		ownerConnService.grant_api_roles()
+		ownerConnService.grant_janitor_roles()

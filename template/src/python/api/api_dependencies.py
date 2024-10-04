@@ -237,3 +237,10 @@ def get_account_if_has_scope(
 			detail=[build_error_obj("Account not found")],
 		)
 	return prev
+
+def get_page(
+	page: int = 1,
+) -> int:
+	if page > 0:
+		page -= 1
+	return page

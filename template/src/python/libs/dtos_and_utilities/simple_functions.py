@@ -118,3 +118,6 @@ def int_or_str(s: Union[int, str]) -> Union[int, str]:
 		return i
 	except:
 		return s
+
+def clean_search_term_for_like(searchTerm: str) -> str:
+	return searchTerm.replace("_","\\_").replace("%","\\%")

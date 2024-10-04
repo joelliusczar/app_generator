@@ -3,9 +3,11 @@ import re
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Connection
 from <%= projectNameSnake %>.dtos_and_utilities import (
-	DbUsers
+	DbUsers,
+	api_log_level
 )
-
+#https://github.com/PyMySQL/PyMySQL/issues/590
+from pymysql.constants import CLIENT
 
 class EnvManager:
 
@@ -14,7 +16,7 @@ class EnvManager:
 		if EnvManager.test_flag():
 			return os.environ["<%= ucPrefix %>_TEST_ROOT"]
 		return os.environ["<%= ucPrefix %>_APP_ROOT"]
-	
+
 	@classmethod
 	def relative_content_home(cls) -> str:
 		contentHome = os.environ["<%= ucPrefix %>_CONTENT_HOME"]
@@ -26,11 +28,15 @@ class EnvManager:
 
 	@classmethod
 	def db_setup_pass(cls) -> str:
-		return os.environ.get("__DB_SETUP_PASS__", "")
+		return os.environ.get("<%= ucPrefix %>_DB_PASS_SETUP", "")
 
 	@classmethod
 	def db_pass_api(cls) -> str:
 		return os.environ.get("<%= ucPrefix %>_DB_PASS_API", "")
+
+	@classmethod
+	def db_pass_janitor(cls) -> str:
+		return os.environ.get("<%= ucPrefix %>_DB_PASS_JANITOR", "")
 
 	@classmethod
 	def db_pass_owner(cls) -> str:
@@ -40,7 +46,6 @@ class EnvManager:
 	def templates_dir(cls) -> str:
 		templateDir = os.environ["<%= ucPrefix %>_TEMPLATES_DIR_CL"]
 		return f"{EnvManager.app_root()}/{templateDir}"
-
 
 	@classmethod
 	def sql_script_dir(cls) -> str:
@@ -60,6 +65,10 @@ class EnvManager:
 		return os.environ["<%= ucPrefix %>_AUTH_SECRET_KEY"]
 
 	@classmethod
+	def api_log_level(cls) -> str:
+		return api_log_level
+
+	@classmethod
 	def get_configured_api_connection(
 		cls,
 		dbName: str,
@@ -75,6 +84,24 @@ class EnvManager:
 		conn = engine.connect()
 		return conn
 
+	@classmethod
+	def get_configured_janitor_connection(
+		cls,
+		dbName: str,
+		echo: bool=False
+	) -> Connection:
+		dbPass = EnvManager.db_pass_janitor()
+		if not dbPass:
+			raise RuntimeError("The system is not configured correctly for that.")
+		engine = create_engine(
+			f"mysql+pymysql://{DbUsers.JANITOR_USER()}:{dbPass}@localhost/{dbName}",
+			echo=echo,
+			connect_args={
+				"client_flag": CLIENT.MULTI_STATEMENTS | CLIENT.MULTI_RESULTS
+			},
+		)
+		conn = engine.connect()
+		return conn
 
 	@staticmethod
 	def read_config_value(confLocation: str, key: str) -> str:

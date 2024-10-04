@@ -124,7 +124,7 @@ sudo_rm_contents() (
 )
 
 
-rm_contents_if_exist() (
+rm_contents_if_filled() (
 	dirEmptira="$1"
 	if ! is_dir_empty "$dirEmptira"; then
 		sudo_rm_contents "$dirEmptira"
@@ -168,7 +168,7 @@ empty_dir_contents() (
 	echo "emptying '${dirEmptira}'"
 	error_check_path "$dirEmptira" &&
 	if [ -e "$dirEmptira" ]; then
-		rm_contents_if_exist || return "$?"
+		rm_contents_if_filled "$dirEmptira" || return "$?"
 	else
 		sudo_mkdir "$dirEmptira" || return "$?"
 	fi &&
@@ -233,6 +233,12 @@ gen_pass() (
 	pass_len=${1:-16}
 	LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c "$pass_len"
 )
+
+
+gen_pass_2() {
+	pass_len=${1:-16}
+	openssl rand -hex "$pass_len"
+}
 
 
 is_ssh() (
@@ -390,7 +396,7 @@ get_ssl_public() (
 
 set_python_version_const() {
 	#python version info
-	if <%= lcPrefix %>-python -V >/dev/null 2>&1; then
+	if <%= lcPrefix %>-python -V >/dev/null 2>&1 && [ -z "$VIRTUAL_ENV" ]; then
 		pyVersion=$(<%= lcPrefix %>-python -V)
 	elif python3 -V >/dev/null 2>&1; then
 		pyVersion=$(python3 -V)
@@ -411,11 +417,11 @@ is_python_version_good() {
 }
 
 
-__is_current_dir_repo__() {
+is_current_dir_repo() {
 	dir="$1"
 	[ -f "$dir"/dev_ops.sh ] &&
 	[ -f "$dir"/README.md ] &&
-	[ -f "$dir"/deploy_to_server.sh ] &&
+	[ -f "$dir"/deploy.sh ] &&
 	[ -d "$dir"/.vscode ] &&
 	[ -d "$dir"/src ] &&
 	[ -d "$dir"/src/<%= projectNameSnake %> ]
@@ -474,12 +480,14 @@ __deployment_env_check_recommended__() {
 
 	[ -n "$<%= ucPrefix %>_LOCAL_REPO_DIR" ] ||
 	echo 'environmental var <%= ucPrefix %>_LOCAL_REPO_DIR not set'
-<% if db == "mysql" %>
+<% if db and !db.empty? %>
 	[ -n "$(__get_db_setup_key__)" ] ||
-	echo 'deployment var __DB_SETUP_PASS__ not set in keys'
+	echo 'deployment var <%= ucPrefix %>_DB_PASS_SETUP not set in keys'
 	[ -n "$(__get_db_owner_key__)" ] ||
 	echo 'deployment var <%= ucPrefix %>_DB_PASS_OWNER not set in keys'
 <% end %>
+	[ -n "$<%= ucPrefix %>_API_LOG_LEVEL" ] ||
+	echo 'deployment var <%= ucPrefix %>_API_LOG_LEVEL not set in keys'
 }
 
 
@@ -517,13 +525,19 @@ __deployment_env_check_required__() {
 	track_exit_code ||
 	echo 'deployment var <%= ucPrefix %>_NAMESPACE_UUID not set in keys'
 
-<% if db == "mysql" %>
+<% if db and !db.empty? %>
 	#db
 	[ -n "$(__get_api_db_user_key__)" ]
 	track_exit_code ||
 	echo 'deployment var <%= ucPrefix %>_DB_PASS_API not set in keys'
-	return "$fnExitCode"
+	[ -n "$(__get_janitor_db_user_key__)" ]
+	track_exit_code ||
+	echo 'deployment var <%= ucPrefix %>_DB_PASS_JANITOR not set in keys'
 <% end %>
+	if [ -n "$__TEST_FLAG__" ]; then
+		echo 'TEST FLAG active'
+	fi
+	return "$fnExitCode"
 }
 
 
@@ -538,9 +552,9 @@ __server_env_check_recommended__() {
 	#possibly problems if missing
 	[ -n "$<%= ucPrefix %>_LOCAL_REPO_DIR" ] ||
 	echo 'environmental var <%= ucPrefix %>_LOCAL_REPO_DIR not set'
-<% if db == "mysql" %>
-	[ -n "$__DB_SETUP_PASS__" ] ||
-	echo 'environmental var __DB_SETUP_PASS__ not set in keys'
+<% if db and !db.empty? %>
+	[ -n "$<%= ucPrefix %>_DB_PASS_SETUP" ] ||
+	echo 'environmental var <%= ucPrefix %>_DB_PASS_SETUP not set in keys'
 	[ -n "$<%= ucPrefix %>_DB_PASS_OWNER" ] ||
 	echo 'environmental var <%= ucPrefix %>_DB_PASS_OWNER not set in keys'
 <% end %>
@@ -574,11 +588,14 @@ __server_env_check_required__() {
 	track_exit_code ||
 	echo 'deployment var <%= ucPrefix %>_NAMESPACE_UUID not set in keys'
 
-<% if db == "mysql" %>
+<% if db and !db.empty? %>
 	#db
 	[ -n "$<%= ucPrefix %>_DB_PASS_API" ]
 	track_exit_code ||
 	echo 'environmental var <%= ucPrefix %>_DB_PASS_API not set'
+	[ -n "$<%= ucPrefix %>_DB_PASS_JANITOR" ]
+	track_exit_code ||
+	echo 'environmental var <%= ucPrefix %>_DB_PASS_JANITOR not set'
 <% end %>
 	return "$fnExitCode"
 }
@@ -594,9 +611,9 @@ __dev_env_check_recommended__() {
 	#possibly problems if missing
 	[ -n "$<%= ucPrefix %>_REPO_URL" ] ||
 	echo 'environmental var <%= ucPrefix %>_REPO_URL not set'
-<% if db == "mysql" %>
-	[ -n "$__DB_SETUP_PASS__" ] ||
-	echo 'environmental var __DB_SETUP_PASS__ not set in keys'
+<% if db and !db.empty?" %>
+	[ -n "$<%= ucPrefix %>_DB_PASS_SETUP" ] ||
+	echo 'environmental var <%= ucPrefix %>_DB_PASS_SETUP not set in keys'
 	[ -n "$<%= ucPrefix %>_DB_PASS_OWNER" ] ||
 	echo 'environmental var <%= ucPrefix %>_DB_PASS_OWNER not set in keys'
 <% end %>
@@ -617,11 +634,14 @@ __dev_env_check_required__() {
 	[ -n "$<%= ucPrefix %>_ENV" ]
 	track_exit_code ||
 	echo 'environmental var <%= ucPrefix %>_ENV not set'
-<% if db == "mysql" %>
+<% if db and !db.empty? %>
 	#db
 	[ -n "$<%= ucPrefix %>_DB_PASS_API" ]
 	track_exit_code ||
 	echo 'environmental var <%= ucPrefix %>_DB_PASS_API not set'
+	[ -n "$<%= ucPrefix %>_DB_PASS_JANITOR" ]
+	track_exit_code ||
+	echo 'environmental var <%= ucPrefix %>_DB_PASS_JANITOR not set'
 <% end %>
 
 	#for encrypting app token
@@ -647,7 +667,7 @@ get_repo_path() (
 	if [ -n "$<%= ucPrefix %>_LOCAL_REPO_DIR" ]; then
 		echo "$<%= ucPrefix %>_LOCAL_REPO_DIR"
 		return
-	elif __is_current_dir_repo__ "$PWD"; then
+	elif is_current_dir_repo "$PWD"; then
 		echo "$PWD"
 		return
 	else
@@ -656,7 +676,7 @@ get_repo_path() (
 				-path "$<%= ucPrefix %>_BUILD_DIR"/"$<%= ucPrefix %>_PROJ_NAME_SNAKE"
 				);
 		do
-			if __is_current_dir_repo__ "$guess"; then
+			if is_current_dir_repo "$guess"; then
 				echo "$guess"
 				return
 			fi
@@ -736,13 +756,13 @@ __get_id_file__() (
 	perl -ne 'print "$1\n" if /<%= ucPrefix %>_SERVER_KEY_FILE=(.+)/' "$keyFile"
 )
 
-<% if db == "mysql" %>
+<% if db and !db.empty? %>
 __get_db_setup_key__() (
-	if [ -n "$__DB_SETUP_PASS__" ] && [ "$<%= ucPrefix %>_ENV" != 'local' ]; then
-		echo "$__DB_SETUP_PASS__"
+	if [ -n "$<%= ucPrefix %>_DB_PASS_SETUP" ] && [ "$<%= ucPrefix %>_ENV" != 'local' ]; then
+		echo "$<%= ucPrefix %>_DB_PASS_SETUP"
 		return
 	fi
-	perl -ne 'print "$1\n" if /__DB_SETUP_PASS__=(\w+)/' \
+	perl -ne 'print "$1\n" if /<%= ucPrefix %>_DB_PASS_SETUP=(\w+)/' \
 		"$(__get_app_root__)"/keys/"$<%= ucPrefix %>_PROJ_NAME_SNAKE"
 )
 
@@ -755,8 +775,15 @@ __get_db_owner_key__() (
 	perl -ne 'print "$1\n" if /<%= ucPrefix %>_DB_PASS_OWNER=(\w+)/' \
 		"$(__get_app_root__)"/keys/"$<%= ucPrefix %>_PROJ_NAME_SNAKE"
 )
-<% end %>
 
+__get_janitor_db_user_key__() (
+	if [ -n "$<%= ucPrefix %>_DB_PASS_JANITOR" ] && [ "$<%= ucPrefix %>_ENV" != 'local' ]; then
+		echo "$<%= ucPrefix %>_DB_PASS_JANITOR"
+		return
+	fi
+	perl -ne 'print "$1\n" if /<%= ucPrefix %>_DB_PASS_JANITOR=(\w+)/' \
+		"$(__get_app_root__)"/keys/"$<%= ucPrefix %>_PROJ_NAME_SNAKE"
+)
 
 __get_api_db_user_key__() (
 	if [ -n "$<%= ucPrefix %>_DB_PASS_API" ] && [ "$<%= ucPrefix %>_ENV" != 'local' ]; then
@@ -766,6 +793,7 @@ __get_api_db_user_key__() (
 	perl -ne 'print "$1\n" if /<%= ucPrefix %>_DB_PASS_API=(\w+)/' \
 		"$(__get_app_root__)"/keys/"$<%= ucPrefix %>_PROJ_NAME_SNAKE"
 )
+<% end %>
 
 
 __get_remote_private_key__() (
@@ -842,33 +870,55 @@ install_py_env() {
 }
 
 
+__replace_dev_ops_lib_files__() {
+	envRoot="$(__get_app_root__)"/"$MC_TRUNK"
+	copy_dir "$MC_DEV_OPS_LIB_SRC" \
+		"$(get_libs_dest_dir "$envRoot")""$MC_DEV_OPS_LIB"
+}
+
 __replace_lib_files__() {
+	__replace_dev_ops_lib_files__ &&
 	envRoot="$(__get_app_root__)"/"$<%= ucPrefix %>_TRUNK"
 <% if apiLang == "python" %>
 	regen_file_reference_file &&
 	copy_dir "$<%= ucPrefix %>_LIB_SRC" \
 		"$(get_libs_dest_dir "$envRoot")""$<%= ucPrefix %>_LIB"
 <% end %>
-	copy_dir "$<%= ucPrefix %>_DEV_OPS_LIB_SRC" \
-		"$(get_libs_dest_dir "$envRoot")""$<%= ucPrefix %>_DEV_OPS_LIB"
 }
 
 
 __install_py_env_if_needed__() {
+	libChoice=${1:-all}
+	tmpVirturalEnv="$VIRTUAL_ENV"
 	if [ ! -e "$(__get_app_root__)"/"$<%= ucPrefix %>_TRUNK"/"$<%= ucPrefix %>_PY_ENV"/bin/activate ]; then
 		__install_py_env__
 	else
 		echo "replacing <%= projectNameSnake %> files"
-		__replace_lib_files__ >/dev/null #only replace my code
+		if [ -z "$VIRTUAL_ENV" ]; then
+			echo "activate environment"
+			. "$(__get_app_root__)"/"$<%= ucPrefix %>_TRUNK"/"$<%= ucPrefix %>_PY_ENV"/bin/activate
+		fi &&
+		if [ "$libChoice" = 'all' ]; then
+			__replace_lib_files__ >/dev/null #only replace my code
+		elif [ "$libChoice" = 'devops' ]; then
+			__replace_dev_ops_lib_files__
+		fi
+		#if we're in env and we opened it, deactivate it.
+		if [ -n "$VIRTUAL_ENV" ] && [ -z "$tmpVirturalEnv"]; then
+			echo "deactivate environment"
+			deactivate 2>&1 1>/dev/null
+		fi
 	fi
 }
 
 activate_<%= lcPrefix %>_env() {
+	#activate specific environment.
+	libChoice="$1"
 	if [ -n "$VIRTUAL_ENV" ]; then
 		deactivate 2>&1 1>/dev/null
 	fi
 	set_env_vars "$@" &&
-	__install_py_env_if_needed__ &&
+	__install_py_env_if_needed__ "$libChoice" &&
 	. "$(__get_app_root__)"/"$<%= ucPrefix %>_TRUNK"/"$<%= ucPrefix %>_PY_ENV"/bin/activate
 }
 
@@ -911,7 +961,7 @@ copy_lib_to_test() (
 
 
 #test runner needs to read .env
-setup_env_api_file() (
+__setup_env_api_file__() (
 	echo 'setting up .env file'
 	envFile="$(__get_app_root__)"/"$<%= ucPrefix %>_CONFIG_DIR"/.env
 	error_check_all_paths "$<%= ucPrefix %>_TEMPLATES_SRC"/.env_api "$envFile" &&
@@ -927,15 +977,18 @@ setup_env_api_file() (
 	perl -pi -e \
 		"s@^(<%= ucPrefix %>_SQL_SCRIPTS_DEST=).*\$@\1'${<%= ucPrefix %>_SQL_SCRIPTS_DEST}'@" \
 		"$envFile" &&
-<% if db == "mysql" %>
+<% if db and !db.empty? %>
 	perl -pi -e \
-		"s@^(__DB_SETUP_PASS__=).*\$@\1'${__DB_SETUP_PASS__}'@" \
+		"s@^(<%= ucPrefix %>_DB_PASS_SETUP=).*\$@\1'${<%= ucPrefix %>_DB_PASS_SETUP}'@" \
 		"$envFile" &&
 	perl -pi -e \
 		"s@^(<%= ucPrefix %>_DB_PASS_OWNER=).*\$@\1'${<%= ucPrefix %>_DB_PASS_OWNER}'@" \
 		"$envFile" &&
 	perl -pi -e \
 		"s@^(<%= ucPrefix %>_DB_PASS_API=).*\$@\1'${<%= ucPrefix %>_DB_PASS_API}'@" \
+		"$envFile" &&
+	perl -pi -e \
+		"s@^(<%= ucPrefix %>_DB_PASS_JANITOR=).*\$@\1'${<%= ucPrefix %>_DB_PASS_JANITOR}'@" \
 		"$envFile" &&
 <% end %>
 	perl -pi -e \
@@ -944,27 +997,45 @@ setup_env_api_file() (
 	perl -pi -e \
 		"s@^(<%= ucPrefix %>_NAMESPACE_UUID=).*\$@\1'${<%= ucPrefix %>_NAMESPACE_UUID}'@" \
 		"$envFile" &&
+	perl -pi -e \
+		"s@^(<%= ucPrefix %>_API_LOG_LEVEL=).*\$@\1'${<%= ucPrefix %>_API_LOG_LEVEL}'@" \
+		"$envFile" &&
 	echo 'done setting up .env file'
 )
 
 
 <% if db == "mysql" %>
-setup_db() (
-	echo 'setting up initial db'
+__setup_db_mysql__() (
+	echo 'initial db setup'
 	process_global_vars "$@" &&
-
+	__replace_sql_script__ &&
+<% if apiLang == "python" %>
+	__install_py_env_if_needed__ &&
 	. "$(__get_app_root__)"/"$<%= ucPrefix %>_TRUNK"/"$<%= ucPrefix %>_PY_ENV"/bin/activate &&
-	python <<-EOF
-	from <%= projectNameSnake %>.tables import metadata
-	from <%= projectNameSnake %>.services import EnvManager
-	envManager = EnvManager()
-	conn = envManager.get_configured_db_connection()
-	metadata.create_all(conn.engine)
+<% end %>
+	#going to allow an error as a valid result by redirecting error to out
+	rootHash=$(mysql -srN -e \
+		"SELECT password FROM mysql.user WHERE user = 'root' LIMIT 1" 2>&1
+	)
+	redacted=$(echo "$rootHash" | sed -e 's/\*[A-F0-9]\{40\}/<suppresed>/')
+	echo "root hash: ${redacted}"
+	if [ -z "$rootHash" ] || [ "$rootHash" = 'invalid' ]; then
+		set_db_root_initial_password
+	fi &&
+<% if apiLang == "python" %>
+	(python <<EOF
 
-	print('Created all tables')
-	EOF
+from musical_chairs_libs.services import (
+	setup_database
+)
+dbName="<%= projectNameSnake %>_db"
+setup_database(dbName)
 
-	echo 'done with db stuff'
+
+EOF
+	)
+<% end %>
+echo 'done with initial db setup'
 )
 
 
@@ -996,54 +1067,13 @@ revoke_default_db_accounts() (
 
 
 set_db_root_initial_password() (
-	if [ -n "$__DB_SETUP_PASS__" ]; then
+	if [ -n "$<%= ucPrefix %>_DB_PASS_SETUP" ]; then
 		sudo -p 'Updating db root password' mysql -u root -e \
-			"SET PASSWORD FOR root@localhost = PASSWORD('${__DB_SETUP_PASS__}');"
+			"SET PASSWORD FOR root@localhost = PASSWORD('${<%= ucPrefix %>_DB_PASS_SETUP}');"
 	else
 		echo 'Need a password for root db account'
 		return 1
 	fi
-)
-
-
-setup_database() (
-	echo 'initial db setup'
-	process_global_vars "$@" &&
-	__replace_sql_script__ &&
-<% if apiLang == "python" %>
-	__install_py_env_if_needed__ &&
-	. "$(__get_app_root__)"/"$<%= ucPrefix %>_TRUNK"/"$<%= ucPrefix %>_PY_ENV"/bin/activate &&
-<% end %>
-	#going to allow an error as a valid result by redirecting error to out
-	rootHash=$(mysql -srN -e \
-		"SELECT password FROM mysql.user WHERE user = 'root' LIMIT 1" 2>&1
-	)
-	redacted=$(echo "$rootHash" | sed -e 's/\*[A-F0-9]\{40\}/<suppresed>/')
-	echo "root hash: ${redacted}"
-	if [ -z "$rootHash" ] || [ "$rootHash" = 'invalid' ]; then
-		set_db_root_initial_password
-	fi &&
-<% if apiLang == "python" %>
-	(python <<EOF
-from <%= projectNameSnake %>.services import (
-	DbRootConnectionService,
-	DbOwnerConnectionService
-)
-dbName="<%= projectNameSnake %>_db"
-with DbRootConnectionService() as rootConnService:
-	rootConnService.create_db(dbName)
-	rootConnService.create_owner()
-	rootConnService.create_app_users()
-	rootConnService.grant_owner_roles(dbName)
-
-with DbOwnerConnectionService(dbName, echo=True) as ownerConnService:
-	ownerConnService.create_tables()
-	ownerConnService.grant_api_roles()
-
-EOF
-	)
-<% end %>
-echo 'done with initial db setup'
 )
 
 
@@ -1070,6 +1100,12 @@ EOF
 	echo "Done tearing down db"
 )
 <% end %>
+
+setup_db() (
+	<% if db == "mysql" %>
+		__setup_db_mysql__
+	<% end %>
+)
 
 sync_utility_scripts() (
 	process_global_vars "$@" &&
@@ -1722,14 +1758,16 @@ __get_remote_export_script__() (
 	output="export expName='${expName}';"
 	output="${output} export PB_SECRET='$(__get_pb_secret__)';" &&
 	output="${output} export PB_API_KEY='$(__get_pb_api_key__)';" &&
-<% if db == "mysql" %>
 	output="${output} export <%= ucPrefix %>_AUTH_SECRET_KEY='$(__get_api_auth_key__)';" &&
 	output="${output} export <%= ucPrefix %>_NAMESPACE_UUID='$(__get_namespace_uuid__)';" &&
+<% if db and !db.empty? %>
 	output="${output} export <%= ucPrefix %>_DATABASE_NAME='<%= projectNameLc %>_db';" &&
-	output="${output} export __DB_SETUP_PASS__='$(__get_db_setup_key__)';" &&
+	output="${output} export <%= ucPrefix %>_DB_PASS_SETUP='$(__get_db_setup_key__)';" &&
 	output="${output} export <%= ucPrefix %>_DB_PASS_OWNER='$(__get_db_owner_key__)';" &&
 	output="${output} export <%= ucPrefix %>_DB_PASS_API='$(__get_api_db_user_key__)';" &&
+	output="${output} export <%= ucPrefix %>_DB_PASS_JANITOR='$(__get_janitor_db_user_key__)';" &&
 <% end %>
+	output="${output} export <%= ucPrefix %>_API_LOG_LEVEL='${<%= ucPrefix %>_API_LOG_LEVEL}';" &&
 	echo "$output"
 )
 
@@ -1778,8 +1816,8 @@ setup_api() (
 	copy_dir "$<%= ucPrefix %>_API_SRC" "$(get_web_root)"/"$<%= ucPrefix %>_API_DEST" &&
 	create_py_env_in_app_trunk &&
 <% end %>
-<% if db == "mysql" %>
-	setup_database &&
+<% if db and !db.empty? %>
+	setup_db &&
 <% end %>
 	setup_nginx_confs &&
 	echo "done setting up api"
@@ -1853,7 +1891,7 @@ startup_full_web() (
 
 
 __create_fake_keys_file__() {
-	echo "<%= lcPrefix %>_auth_key=$(openssl rand -hex 32)" \
+	echo "<%= lcPrefix %>_auth_key=$(gen_pass_2 32)" \
 		> "$(__get_app_root__)"/keys/"$<%= ucPrefix %>_PROJ_NAME_SNAKE"
 }
 
@@ -1873,30 +1911,9 @@ get_hash_of_file() (
 regen_file_reference_file() (
 	process_global_vars "$@" &&
 	outputFile="$<%= ucPrefix %>_LIB_SRC"/dtos_and_utilities/file_reference.py
-	printf '####### This file is generated. #######\n' > "$outputFile"
-	printf '# edit regen_file_reference_file #\n' >> "$outputFile"
-	printf '# in <%= lcPrefix %>_dev_ops.sh and rerun\n' >> "$outputFile"
-	printf 'from enum import Enum\n\n' >> "$outputFile"
-	printf 'class SqlScripts(Enum):\n' >> "$outputFile"
-	for script in "$<%= ucPrefix %>_SQL_SCRIPTS_SRC"/*.sql; do
-		enumName=$(basename "$script" '.sql' | \
-			sed -e 's/[0-9]*.\(.*\)/\1/' | \
-			perl -pe 'chomp if eof' | \
-			tr '[:punct:][:space:]' '_' | \
-			tr '[:lower:]' '[:upper:]'
-		)
-		fileName=$(basename "$script")
-		hashValue=$(get_hash_of_file "$script")
-		printf \
-		"\t${enumName} = (\n\t\t\"${fileName}\",\n\t\t\"${hashValue}\"\n\t)\n" \
-			>> "$outputFile"
-	done
-	printf '\n\t@property\n' >> "$outputFile"
-	printf '\tdef file_name(self) -> str:\n' >> "$outputFile"
-	printf '\t\treturn self.value[0]\n\n' >> "$outputFile"
-	printf '\t@property\n' >> "$outputFile"
-	printf '\tdef checksum(self) -> str:\n' >> "$outputFile"
-	printf '\t\treturn self.value[1]\n' >> "$outputFile"
+	activate_<%= lcPrefix %>_env 'devops' &&
+	python -m 'musical_chairs_dev_ops.regen_file_reference_file'\
+		"$MC_SQL_SCRIPTS_SRC" "$outputFile"
 )
 <% end %>
 
@@ -1928,7 +1945,7 @@ setup_unit_test_env() (
 	copy_dir "$<%= ucPrefix %>_TEMPLATES_SRC" "$(__get_app_root__)"/"$<%= ucPrefix %>_TEMPLATES_DEST" &&
 	__replace_sql_script__
 	sync_requirement_list
-	setup_env_api_file
+	__setup_env_api_file__
 	pyEnvPath="$(__get_app_root__)"/"$<%= ucPrefix %>_TRUNK"/"$<%= ucPrefix %>_PY_ENV"
 	#redirect stderr into stdout so that missing env will also trigger redeploy
 	srcChanges=$(find "$<%= ucPrefix %>_LIB_SRC" -newer "$pyEnvPath" 2>&1)
@@ -2014,6 +2031,7 @@ get_web_root() (
 )
 
 
+#call set_env_vars after connecting
 connect_remote() (
 	process_global_vars "$@" &&
 	echo "connectiong to $(__get_address__) using $(__get_id_file__)" &&
@@ -2073,8 +2091,8 @@ process_global_args() {
 				__GLOBAL_ARGS__="${__GLOBAL_ARGS__} skip='${__SKIP__}'"
 				;; #()
 			(dbsetuppass=*)
-				export __DB_SETUP_PASS__=${1#dbsetuppass=}
-				__GLOBAL_ARGS__="${__GLOBAL_ARGS__} dbsetuppass='${__DB_SETUP_PASS__}'"
+				export <%= ucPrefix %>_DB_PASS_SETUP=${1#dbsetuppass=}
+				__GLOBAL_ARGS__="${__GLOBAL_ARGS__} dbsetuppass='${<%= ucPrefix %>_DB_PASS_SETUP}'"
 				;; #()
 			(*) ;;
 		esac
@@ -2120,6 +2138,10 @@ define_consts() {
 	export <%= ucPrefix %>_SERVER_NAME=$(__get_domain_name__ "$<%= ucPrefix %>_ENV")
 	export <%= ucPrefix %>_FULL_URL="https://${<%= ucPrefix %>_SERVER_NAME}"
 
+	if is_current_dir_repo "$PWD" && [ "$<%= ucPrefix %>_ENV" = 'local' ]; then
+		echo "Running inside build dir. Setting test flag"
+		export __TEST_FLAG__='true'
+	fi
 	export __<%= ucPrefix %>_CONSTANTS_SET__='true'
 	echo "constants defined"
 }
@@ -2234,12 +2256,13 @@ unset_globals() {
 		<%= ucPrefix %>_AUTH_SECRET_KEY
 		<%= ucPrefix %>_NAMESPACE_UUID
 		<%= ucPrefix %>_DB_PASS_API
+		<%= ucPrefix %>_DB_PASS_JANITOR
 		<%= ucPrefix %>_DB_PASS_OWNER
 		<%= ucPrefix %>_LOCAL_REPO_DIR
 		<%= ucPrefix %>_REPO_URL
 		<%= ucPrefix %>_SERVER_KEY_FILE
 		<%= ucPrefix %>_SERVER_SSH_ADDRESS
-		__DB_SETUP_PASS__
+		<%= ucPrefix %>_DB_PASS_SETUP
 	EOF
 	)
 	cat "$(get_repo_path)"/<%= lcPrefix %>_dev_ops.sh | grep export \

@@ -65,11 +65,13 @@ export PB_SECRET="$(__get_pb_secret__)" &&
 export PB_API_KEY="$(__get_pb_api_key__)" &&
 export <%= ucPrefix %>_AUTH_SECRET_KEY="$(__get_api_auth_key__)" &&
 export <%= ucPrefix %>_AUTH_SECRET_KEY="$(__get_api_auth_key__)" &&
-<% if db == "mysql" %>
+<% if db and !db.empty? %>
 export <%= ucPrefix %>_DATABASE_NAME='<%= projectNameSnake %>_db';
-export __DB_SETUP_PASS__="$(__get_db_setup_key__)" &&
+export <%= ucPrefix %>_DB_PASS_SETUP="$(__get_db_setup_key__)" &&
 export <%= ucPrefix %>_DB_PASS_OWNER="$(__get_db_owner_key__)" &&
 export <%= ucPrefix %>_DB_PASS_API="$(__get_api_db_user_key__)"
+export <%= ucPrefix %>_DB_PASS_JANITOR="$(__get_janitor_db_user_key__)" &&
+export <%= ucPrefix %>_API_LOG_LEVEL="$<%= ucPrefix %>_API_LOG_LEVEL" &&
 <% end %>
 
 RemoteScriptEOF0

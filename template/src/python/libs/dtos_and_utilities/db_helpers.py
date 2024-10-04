@@ -32,6 +32,7 @@ from .account_dtos import (
 class DbUsers(Enum):
 	OWNER_USER = "<%= lcPrefix %>_owner"
 	API_USER = "api_user"
+	JANITOR_USER = "janitor_user"
 
 	def format_user(self, host:str="localhost") -> str:
 		return f"'{self.value}'@'{host}'"

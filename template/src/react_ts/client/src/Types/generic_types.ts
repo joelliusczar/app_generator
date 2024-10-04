@@ -38,6 +38,10 @@ export interface StringObject {
 	[key: string]: string
 }
 
+export interface PrimitiveObject {
+	[key: string]: string | number | null
+}
+
 export interface DontCareMap {
 	[key: string]: unknown
 }

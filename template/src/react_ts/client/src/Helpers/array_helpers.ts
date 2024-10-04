@@ -28,7 +28,25 @@ export const useCombinedContextAndFormItems = <T extends NamedIdItem>(
 	return combined;
 };
 
-export const notNullPredicate = 
+export const notNullPredicate =
 	<T>(value: T | null | undefined): value is T => {
 		return value !== null && value !== undefined;
 	};
+
+export const prefix_split  = (prefix: string) => {
+	const result = prefix
+		.split("/")
+		.filter(s => !!s)
+		.reduce((a, c) => {
+			if (a.length) {
+				const last = a[a.length - 1];
+				a.push(`${last}${c}/`);
+				return a;
+			}
+			else {
+				a.push(`${c}/`);
+				return a;
+			}
+		},[] as string[]);
+	return result;
+};
