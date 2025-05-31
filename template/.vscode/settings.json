@@ -4,7 +4,7 @@
   "workbench.colorCustomizations": {
     "editorRuler.foreground": "#ef40ff"
   },
-<% if apiLang == "python" %>
+<% if apiLang.key == API_CHOICE_KEYS::PYTHON %>
   "python.analysis.extraPaths": ["src/tests"],
   "python.languageServer": "Pylance",
   "python.analysis.typeCheckingMode": "strict",

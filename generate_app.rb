@@ -7,21 +7,80 @@ require_relative "generate_no_framework"
 
 include AppGenUtils
 
+LangChoice = Struct.new("LangChoice",:key,:name, :display, :classTag)
 
 
+module API_CHOICE_KEYS
+	NONE = 1
+	PYTHON = 2
+end
 
-pythonChoice = 2
-reactTsChoice = 2
+module CLIENT_CHOICE_KEYS
+	NONE = 1
+	REACT_TYPESCRIPT = 2
+end
+
+module DB_CHOICE_KEYS
+	NONE = 1
+	MY_SQL = 2
+end
 
 apiLangMap = {
-	1 => { name: "", display: "Nothing" },
-	2 => { name: "python", display: "Python 3" },
-	3 => { name: "csharp", display: "C#" }
+	API_CHOICE_KEYS::NONE => 
+		LangChoice.new(
+			API_CHOICE_KEYS::NONE,
+			"",
+			"Nothing",
+			""
+		),
+	API_CHOICE_KEYS::PYTHON => 
+		LangChoice.new(
+			API_CHOICE_KEYS::PYTHON,
+			"python",
+			"Python 3",
+			""
+		)
 }
 
 feLangMap = {
-	1 => { name: "", display: "Nothing" },
-	2 => { name: "react-ts", display: "react/typescript" }
+	CLIENT_CHOICE_KEYS::NONE => 
+		LangChoice.new(
+			CLIENT_CHOICE_KEYS::NONE,
+			"",
+			"Nothing",
+			""
+		),
+	CLIENT_CHOICE_KEYS::REACT_TYPESCRIPT =>
+		LangChoice.new(
+			CLIENT_CHOICE_KEYS::REACT_TYPESCRIPT,
+			"react-ts",
+			"react/typescript",
+			""
+		)
+}
+
+dbMap = {
+	DB_CHOICE_KEYS::NONE => LangChoice.new(
+		DB_CHOICE_KEYS::NONE,
+		"",
+		"Nothing"
+	),
+	DB_CHOICE_KEYS::MY_SQL => 
+		LangChoice.new(
+			DB_CHOICE_KEYS::MY_SQL,
+			"mysql",
+			"MySql"
+		)
+}
+
+api_class_map = {
+	API_CHOICE_KEYS::NONE => "SaladPrep::StaticAPILauncher",
+	API_CHOICE_KEYS::PYTHON => "SaladPrep::PyAPILauncher"
+}
+
+db_class_map = {
+	DB_CHOICE_KEYS::NONE => "SaladPrep::NoopAss",
+	DB_CHOICE_KEYS::MY_SQL => "SaladPrep::MyAss"
 }
 
 puts "Project Name?"
@@ -48,11 +107,12 @@ end
 
 apiLangChoice = -1
 loop do
-	puts "Api Language? Default: 2) #{apiLangMap[pythonChoice][:display]}"
-	apiLangMap.keys.sort.each {|e| puts "#{e}) #{apiLangMap[e][:display]}"}
+	puts "Api Language? Default: "\
+		"#{API_CHOICE_KEYS::PYTHON}) #{apiLangMap[API_CHOICE_KEYS::PYTHON].display}"
+	apiLangMap.keys.sort.each {|e| puts "#{e}) #{apiLangMap[e].display}"}
 	apiLangInput = gets.chomp
 	if apiLangInput.strip.empty?
-		apiLangChoice = pythonChoice
+		apiLangChoice = API_CHOICE_KEYS::PYTHON
 	else
 		apiLangChoice = apiLangInput.to_i
 	end
@@ -64,11 +124,12 @@ end
 feLangChoice = -1
 loop do
 	puts "Select front end Language? Default: "\
-		"#{reactTsChoice}) #{feLangMap[reactTsChoice][:display]}"
-	feLangMap.keys.sort.each {|e| puts "#{e}) #{feLangMap[e][:display]}"}
+		"#{CLIENT_CHOICE_KEYS::REACT_TYPESCRIPT})"\
+		" #{feLangMap[CLIENT_CHOICE_KEYS::REACT_TYPESCRIPT].display}"
+	feLangMap.keys.sort.each {|e| puts "#{e}) #{feLangMap[e].display}"}
 	feLangInput = gets.chomp
 	if feLangInput.strip.empty?
-		feLangChoice = reactTsChoice
+		feLangChoice = CLIENT_CHOICE_KEYS::REACT_TYPESCRIPT
 	else
 		feLangChoice = feLangInput.to_i
 	end
@@ -84,34 +145,34 @@ end
 
 lcPrefix = prefix.downcase
 ucPrefix = prefix.upcase
-devOpsFile = "#{lcPrefix}_dev_ops"
 projectNameLc = projectName.downcase
 projectNameSnake = to_snake(projectName)
 projectNameFlat = to_flat(projectName)
 
-if apiLangChoice == pythonChoice
-	db = "mysql"
+if apiLangChoice == API_CHOICE_KEYS::PYTHON
+	dbChoice = dbMap[DB_CHOICE_KEYS::MY_SQL]
 else
-	db = ""
+	dbChoice = dbMap[DB_CHOICE_KEYS::NONE]
 end
 
-choices = {
-	devOpsFile: devOpsFile,
-	projectName: projectName,
-	projectNameLc: projectNameLc,
-	projectNameSnake: projectNameSnake,
-	projectNameFlat: projectNameFlat,
-	ucPrefix: ucPrefix,
-	lcPrefix: lcPrefix,
-	title: projectName,
-	apiLang: apiLangMap[apiLangChoice][:name],
-	feLang: feLangMap[feLangChoice][:name],
-	db: db
-}
+ruby_version = "3.3.5"
+projectName = projectName
+projectNameLc = projectNameLc
+projectNameSnake = projectNameSnake
+projectNameFlat = projectNameFlat
+ucPrefix = ucPrefix
+lcPrefix = lcPrefix
+title = projectName
+apiLang = apiLangMap[apiLangChoice]
+feLang = feLangMap[feLangChoice]
+db = dbChoice
 
-if File.exists?("./output")
+
+if File.exist?("./output")
 	FileUtils.remove_dir("./output")
 end
+
+choices = binding
 
 copy_tpl(
 	"gitignore",
@@ -119,18 +180,6 @@ copy_tpl(
 	choices
 )
 
-copy_tpl(
-	"dev_ops.sh",
-	"#{devOpsFile}.sh",
-	choices
-)
-
-
-copy_tpl(
-	"deploy.sh",
-	"deploy.sh",
-	choices
-)
 
 copy_tpl(
 	".vscode/launch.json",
@@ -151,54 +200,40 @@ copy_tpl(
 )
 
 copy_tpl(
-	"install.sh",
-	"install.sh",
+	"dev_ops/tool-versions",
+	"dev_ops/.tool-versions"
+)
+
+copy_tpl(
+	"dev_ops/dev_ops.rb",
+	"dev_ops/dev_ops.rb",
 	choices
 )
 
 copy_tpl(
-	"templates/env_api",
-	"templates/.env_api",
+	"dev_ops/Gemfile",
+	"dev_ops/Gemfile"
+)
+
+copy_tpl(
+	"dev_ops/ruby_dependency_install.sh",
+	"dev_ops/ruby_dependency_install.sh",
 	choices
 )
 
-copy_tpl(
-	"templates/nginx_evil.conf",
-	"templates/nginx_evil.conf"
-)
 
 copy_tpl(
-	"templates/nginx_template.conf",
-	"templates/nginx_template.conf",
+	"readme.md",
+	"README.md",
 	choices
 )
 
-copy_tpl(
-	"templates/nginx_template.conf",
-	"templates/nginx_template.conf",
-	choices
-)
 
-copy_tpl(
-	"dev_ops_libs/python/installed_certs/__main__.py",
-	"#{projectNameSnake}_dev_ops/installed_certs/__main__.py"
-)
-
-copy_tpl(
-	"dev_ops_libs/python/regen_file_reference_file/__main__.py",
-	"#{projectNameSnake}_dev_ops/regen_file_reference_file/__main__.py"
-)
-
-copy_tpl(
-	"requirements.txt",
-	"requirements.txt"
-)
-
-if apiLangChoice == pythonChoice
+if apiLang.key == API_CHOICE_KEYS::PYTHON
 	AppGenPythons::generate(choices)
 end
 
-if feLangChoice == reactTsChoice
+if feLang.key == CLIENT_CHOICE_KEYS::REACT_TYPESCRIPT
 	AppGenReactTs::generate(choices)
 else
 	AppGenNoFramework::generate(choices)

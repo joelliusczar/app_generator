@@ -5,14 +5,19 @@ include AppGenUtils
 module AppGenPythons
 	def self.generate(choices)
 
-		projectName = choices[:projectName]
-		projectNameSnake = choices[:projectNameSnake]
+		projectName = choices.local_variable_get(:projectName)
+		projectNameSnake = choices.local_variable_get(:projectNameSnake)
 		fromLibs = "python/libs"
 		fromApi = "python/api"
 		fromTests = "python/tests"
 
 		srcDtosAndUtilitiesDir = "src/#{fromLibs}/dtos_and_utilities"
 		destDtosAndUtilitiesDir = "src/#{projectNameSnake}/dtos_and_utilities"
+
+		copy_tpl(
+			"requirements.txt",
+			"requirements.txt"
+		)
 
 		copy_tpl(
 			"#{srcDtosAndUtilitiesDir}/type_aliases.py",
