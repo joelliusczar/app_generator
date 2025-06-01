@@ -3,6 +3,8 @@ require_relative "generate_app_util"
 require_relative "generate_python_api"
 require_relative "generate_react_ts"
 require_relative "generate_no_framework"
+require_relative "generate_java_app"
+require_relative "generate_vue_ts"
 
 
 include AppGenUtils
@@ -13,16 +15,19 @@ LangChoice = Struct.new("LangChoice",:key,:name, :display, :classTag)
 module API_CHOICE_KEYS
 	NONE = 1
 	PYTHON = 2
+	JAVA = 3
 end
 
 module CLIENT_CHOICE_KEYS
 	NONE = 1
 	REACT_TYPESCRIPT = 2
+	VUE_TYPESCRIPT = 3
 end
 
 module DB_CHOICE_KEYS
 	NONE = 1
 	MY_SQL = 2
+	POSTGRESQL = 3
 end
 
 apiLangMap = {
@@ -38,6 +43,13 @@ apiLangMap = {
 			API_CHOICE_KEYS::PYTHON,
 			"python",
 			"Python 3",
+			""
+		),
+	API_CHOICE_KEYS::JAVA => 
+		LangChoice.new(
+			API_CHOICE_KEYS::JAVA,
+			"java",
+			"Java",
 			""
 		)
 }
@@ -56,6 +68,13 @@ feLangMap = {
 			"react-ts",
 			"react/typescript",
 			""
+		),
+	CLIENT_CHOICE_KEYS::VUE_TYPESCRIPT =>
+		LangChoice.new(
+			CLIENT_CHOICE_KEYS::VUE_TYPESCRIPT,
+			"vue-ts",
+			"vue/typescript",
+			""
 		)
 }
 
@@ -70,17 +89,25 @@ dbMap = {
 			DB_CHOICE_KEYS::MY_SQL,
 			"mysql",
 			"MySql"
+		),
+	DB_CHOICE_KEYS::POSTGRESQL => 
+		LangChoice.new(
+			DB_CHOICE_KEYS::POSTGRESQL,
+			"postgresql",
+			"PostgreSql"
 		)
 }
 
 api_class_map = {
 	API_CHOICE_KEYS::NONE => "SaladPrep::StaticAPILauncher",
-	API_CHOICE_KEYS::PYTHON => "SaladPrep::PyAPILauncher"
+	API_CHOICE_KEYS::PYTHON => "SaladPrep::PyAPILauncher",
+	API_CHOICE_KEYS::JAVA => "SaladPrep::JavaAPILauncher",
 }
 
 db_class_map = {
 	DB_CHOICE_KEYS::NONE => "SaladPrep::NoopAss",
-	DB_CHOICE_KEYS::MY_SQL => "SaladPrep::MyAss"
+	DB_CHOICE_KEYS::MY_SQL => "SaladPrep::MyAss",
+	DB_CHOICE_KEYS::POSTGRESQL => "SaladPrep::PostGrass"
 }
 
 puts "Project Name?"
@@ -231,10 +258,14 @@ copy_tpl(
 
 if apiLang.key == API_CHOICE_KEYS::PYTHON
 	AppGenPythons::generate(choices)
+elsif apiLang.key == API_CHOICE_KEYS::JAVA
+	AppGenJava::generate(choices)
 end
 
 if feLang.key == CLIENT_CHOICE_KEYS::REACT_TYPESCRIPT
 	AppGenReactTs::generate(choices)
+elsif feLang.key == CLIENT_CHOICE_KEYS::VUE_TYPESCRIPT
+	AppGenVueTs::generate(choices)
 else
 	AppGenNoFramework::generate(choices)
 end

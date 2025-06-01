@@ -196,6 +196,12 @@ module Provincial
 		w_spoon: @w_spoon,
 		monty: @monty
 	)
+<% elsif apiLang.key == API_CHOICE_KEYS::JAVA %>
+	@api_launcher = SaladPrep::JavaApiLauncher.new(
+		egg: @egg,
+		dbass: @dbass,
+		w_spoon: @w_spoon
+	)
 <% elsif apiLang.key == API_CHOICE_KEYS::NONE %>
 	@api_launcher = SaladPrep::StaticAPILauncher.new(
 		egg: @egg,

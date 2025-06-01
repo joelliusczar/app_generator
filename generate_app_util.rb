@@ -58,4 +58,13 @@ module AppGenUtils
 		end
 		File.write(destFile, content)
 	end
+
+	def copy_raw(srcFile, destFile)
+		destFile = "./output/#{destFile}"
+		destDir = File.dirname(destFile)
+		FileUtils.mkdir_p(destDir)
+
+		FileUtils.cp(srcFile, destFile)
+	end
+
 end
