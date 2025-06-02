@@ -165,6 +165,7 @@ loop do
 end
 
 
+
 if prefix.strip.empty?
 	prefix = defaultPrefix
 end
@@ -178,6 +179,8 @@ projectNameFlat = to_flat(projectName)
 
 if apiLangChoice == API_CHOICE_KEYS::PYTHON
 	dbChoice = dbMap[DB_CHOICE_KEYS::MY_SQL]
+elsif if apiLangChoice == API_CHOICE_KEYS::JAVA
+	dbChoice = dbMap[DB_CHOICE_KEYS::POSTGRESQL]
 else
 	dbChoice = dbMap[DB_CHOICE_KEYS::NONE]
 end

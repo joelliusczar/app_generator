@@ -81,8 +81,8 @@ module AppGenVueTs
 		vscodeDest = "#{clientDest}/.vscode"
 
 		copy_tpl(
-			"#{vscodeSrc}/extension.json",
-			"#{vscodeDest}/extension.json"
+			"#{vscodeSrc}/extensions.json",
+			"#{vscodeDest}/extensions.json"
 		)
 
 		copy_tpl(
@@ -112,16 +112,16 @@ module AppGenVueTs
 		apiCallsDest = "#{codeDest}/api_calls"
 
 		copy_tpl(
-			"#{vscodeSrc}/lookups.ts",
-			"#{vscodeDest}/lookups.ts"
+			"#{apiCallsSrc}/lookups.ts",
+			"#{apiCallsDest}/lookups.ts"
 		)
 
 		assetsSrc = "#{codeSrc}/assets"
 		assetsDest = "#{codeDest}/assets"
 
 		copy_tpl(
-			"#{vscodeSrc}/main.css",
-			"#{vscodeDest}/main.css"
+			"#{assetsSrc}/main.css",
+			"#{assetsDest}/main.css"
 		)
 
 		FileUtils.mkdir_p("#{codeDest}/components")

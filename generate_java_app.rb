@@ -12,23 +12,23 @@ module AppGenJava
 		fromTop = "java"
 
 		copy_tpl(
-			"java/gitattributes",
-			".gitattributes"
+			"src/java/gitattributes",
+			"src/.gitattributes"
 		)
 
 		copy_tpl(
-			"java/gradlew",
-			"gradlew"
+			"src/java/gradlew",
+			"src/gradlew"
 		)
 
 		copy_tpl(
-			"java/settings.gradle",
-			"settings.gradle",
+			"src/java/settings.gradle",
+			"src/settings.gradle",
 			choices
 		)
 
-		appDirSrc = "java/app"
-		appDirDest = "app"
+		appDirSrc = "src/java/app"
+		appDirDest = "src/app"
 
 		copy_tpl(
 			"#{appDirSrc}/build.gradle",
@@ -65,8 +65,8 @@ module AppGenJava
 			choices
 		)
 
-		buildSrcDirSrc = "java/buildSrc"
-		buildSrcDirDest = "buildSrc"
+		buildSrcDirSrc = "src/java/buildSrc"
+		buildSrcDirDest = "src/buildSrc"
 
 		copy_tpl(
 			"#{buildSrcDirSrc}/build.gradle",
@@ -97,8 +97,8 @@ module AppGenJava
 			"#{buildSrcDslDirDest}/buildlogic.java-library-conventions.gradle"
 		)
 
-		engineDirSrc = "java/engine"
-		engineDirDest = "engine"
+		engineDirSrc = "src/java/engine"
+		engineDirDest = "src/engine"
 
 		copy_tpl(
 			"#{engineDirSrc}/build.gradle",
@@ -150,8 +150,8 @@ module AppGenJava
 			choices
 		)
 
-		gradleDirSrc = "java/gradle"
-		gradleDirDest = "gradle"
+		gradleDirSrc = "src/java/gradle"
+		gradleDirDest = "src/gradle"
 
 		copy_tpl(
 			"#{gradleDirSrc}/libs.versions.toml",
