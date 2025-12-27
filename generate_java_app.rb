@@ -36,16 +36,16 @@ module AppGenJava
 			choices
 		)
 
-		appDirMainSrc = "#{appDirSrc}/src/main"
+		appDirMainSrc = "#{appDirSrc}/src/main "
 		appDirMainDest = "#{appDirDest}/src/main"
 
 		copy_tpl(
 			"#{appDirMainSrc}/resources/application.yml",
-			"#{appDirMainSrc}/resources/application.yml"
+			"#{appDirMainDest}/resources/application.yml"
 		)
 
-		appCodeSrc = "#{appDirMainSrc}/generated_app/app"
-		appCodeDest = "#{appDirMainDest}/#{projectNameSnake.downcase}/app"
+		appCodeSrc = "#{appDirMainSrc}/java/generated_app/app"
+		appCodeDest = "#{appDirMainDest}/java/#{projectNameSnake.downcase}/app"
 
 		copy_tpl(
 			"#{appCodeSrc}/App.java",
@@ -109,8 +109,7 @@ module AppGenJava
 		engineSrcTopDirSrc = "#{engineDirSrc}/src/main/java/generated_lib/engine"
 		engineSrcTopDirDest = "#{engineDirDest}/src/main/java/#{projectNameSnake.downcase}/engine"
 
-		
-		FileUtils.mkdir_p("#{engineSrcTopDirDest}/constants")
+		mkdir("#{engineSrcTopDirDest}/constants")
 		
 		engineDtosDirSrc = "#{engineSrcTopDirSrc}/dtos"
 		engineDtosDirDest = "#{engineSrcTopDirDest}/dtos"

@@ -17,13 +17,14 @@ from fastapi import (
 )
 from sqlalchemy.engine import Connection
 from <%= projectNameSnake %>.services import (
-	EnvManager,
 	AccountsService,
+	CurrentUserProvider,
 	ProcessService,
 	UserActionsHistoryService
 )
 from <%= projectNameSnake %>.dtos_and_utilities import (
 	AccountInfo,
+	ConfigAcessors,
 	build_error_obj,
 	UserRoleDomain,
 	ActionRule,
@@ -63,21 +64,28 @@ def datetime_provider() -> Callable[[], datetime]:
 	return get_datetime
 
 def get_configured_db_connection(
-	envManager: EnvManager=Depends(EnvManager)
+	configAcessors: ConfigAcessors=Depends(ConfigAcessors)
 ) -> Iterator[Connection]:
-	if not envManager:
-		envManager = EnvManager()
-	conn = envManager.get_configured_api_connection("<%= projectNameSnake %>_db")
+	if not configAcessors:
+		configAcessors = ConfigAcessors()
+	conn = configAcessors.get_configured_api_connection("<%= projectNameSnake %>_db")
 	try:
 		yield conn
 	finally:
 		conn.close()
 
+def current_user_provider(
+	user: AccountInfo = Depends(get_current_user_simple)
+) -> CurrentUserProvider:
+	return CurrentUserProvider(user.id)
+
+
 
 def accounts_service(
-	conn: Connection=Depends(get_configured_db_connection)
+	conn: Connection=Depends(get_configured_db_connection),
+	currentUserProvider : CurrentUserProvider = Depends(current_user_provider)
 ) -> AccountsService:
-	return AccountsService(conn)
+	return AccountsService(conn, currentUserProvider)
 
 def process_service() -> ProcessService:
 	return ProcessService()
@@ -150,6 +158,20 @@ def __open_user_from_request__(
 
 def get_from_path_subject_user(
 	subjectuserkey: Union[int, str] = Depends(subject_user_key_path),
+	accountsService: AccountsService = Depends(accounts_service)
+) -> AccountInfo:
+	user = __open_user_from_request__(subjectuserkey, accountsService)
+	if not user:
+		raise HTTPException(
+			status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+			detail=[build_error_obj("subjectuserkey missing")
+			]
+		)
+	return user
+
+
+def get_from_query_subject_user(
+	subjectuserkey: Union[int, str] = Depends(subject_user_key_query),
 	accountsService: AccountsService = Depends(accounts_service)
 ) -> AccountInfo:
 	user = __open_user_from_request__(subjectuserkey, accountsService)
@@ -238,9 +260,64 @@ def get_account_if_has_scope(
 		)
 	return prev
 
+def get_account_if_has_scope(
+	securityScopes: SecurityScopes,
+	subjectuserkey: Union[int, str] = Depends(subject_user_key_path),
+	currentUser: AccountInfo = Depends(get_current_user_simple),
+	accountsService: AccountsService = Depends(accounts_service)
+) -> AccountInfo:
+	isCurrentUser = subjectuserkey == currentUser.id or\
+		subjectuserkey == currentUser.username
+	scopeSet = {s for s in securityScopes.scopes}
+	hasEditRole = currentUser.isadmin or\
+		any(r.name in scopeSet for r in currentUser.roles)
+	if not isCurrentUser and not hasEditRole:
+		raise build_wrong_permissions_error()
+	prev = accountsService.get_account_for_edit(subjectuserkey) \
+		if subjectuserkey else None
+	if not prev:
+		raise HTTPException(
+			status_code=status.HTTP_404_NOT_FOUND,
+			detail=[build_error_obj("Account not found")],
+		)
+	return prev
+
 def get_page(
 	page: int = 1,
 ) -> int:
 	if page > 0:
 		page -= 1
 	return page
+
+def extract_ip_address(request: Request) -> Tuple[str, str]:
+	candidate = request.headers.get("x-real-ip", "")
+	if not candidate and request.client:
+		candidate = request.client.host
+	try:
+		address = ipaddress.ip_address(candidate)
+		if isinstance(address, ipaddress.IPv4Address):
+			return (candidate, "")
+		else:
+			return ("", candidate)
+	except:
+		return ("","")
+
+
+def get_tracking_info(request: Request):
+	userAgent = request.headers["user-agent"]
+	ipaddresses = extract_ip_address(request)
+	
+	return TrackingInfo(
+		userAgent,
+		ipv4Address=ipaddresses[0],
+		ipv6Address=ipaddresses[1]
+	)
+
+def check_back_key(
+	x_back_key: str = Header(),
+	envManager: ConfigAcessors=Depends(ConfigAcessors)
+):
+	if not envManager:
+		envManager = ConfigAcessors()
+	if envManager.back_key() != x_back_key:
+		raise build_wrong_permissions_error()

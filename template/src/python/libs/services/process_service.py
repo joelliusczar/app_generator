@@ -6,9 +6,9 @@ from enum import Enum
 from itertools import dropwhile, islice
 from typing import Optional
 from <%= projectNameSnake %>.dtos_and_utilities import (
+	ConfigAcessors,
 	get_non_simple_chars
 )
-from .env_manager import EnvManager
 import <%= projectNameSnake %>.dtos_and_utilities.logging as logging
 
 

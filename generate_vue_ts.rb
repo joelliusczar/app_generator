@@ -124,7 +124,7 @@ module AppGenVueTs
 			"#{assetsDest}/main.css"
 		)
 
-		FileUtils.mkdir_p("#{codeDest}/components")
+		mkdir("#{codeDest}/components")
 
 		composablesSrc = "#{codeSrc}/composables"
 		composablesDest = "#{codeDest}/composables"

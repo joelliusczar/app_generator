@@ -67,4 +67,9 @@ module AppGenUtils
 		FileUtils.cp("./template/#{srcFile}", destFile)
 	end
 
+	def mkdir(dest)
+		dest = "./output/#{dest}"
+		FileUtils.mkdir_p(dest)
+	end
+
 end

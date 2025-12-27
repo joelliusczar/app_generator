@@ -11,17 +11,57 @@ module AppGenPythons
 		fromApi = "python/api"
 		fromTests = "python/tests"
 
-		srcDtosAndUtilitiesDir = "src/#{fromLibs}/dtos_and_utilities"
-		destDtosAndUtilitiesDir = "src/#{projectNameSnake}/dtos_and_utilities"
-
 		copy_tpl(
 			"requirements.txt",
 			"requirements.txt"
 		)
 
 		copy_tpl(
-			"#{srcDtosAndUtilitiesDir}/type_aliases.py",
-			"#{destDtosAndUtilitiesDir}/type_aliases.py"
+			"src/#{fromLibs}/file_reference.py",
+			"src/#{projectNameSnake}/file_reference.py",
+			choices
+		)
+
+
+		srcDtosAndUtilitiesDir = "src/#{fromLibs}/dtos_and_utilities"
+		destDtosAndUtilitiesDir = "src/#{projectNameSnake}/dtos_and_utilities"
+
+		
+		copy_tpl(
+			"#{srcDtosAndUtilitiesDir}/constants/__init__.py",
+			"#{destDtosAndUtilitiesDir}/constants/__init__.py"
+		)
+
+		copy_tpl(
+			"#{srcDtosAndUtilitiesDir}/constants/constants.py",
+			"#{destDtosAndUtilitiesDir}/constants/constants.py"
+		)
+			
+		copy_tpl(
+			"#{srcDtosAndUtilitiesDir}/account_dtos.py",
+			"#{destDtosAndUtilitiesDir}/account_dtos.py"
+		)
+
+		copy_tpl(
+			"#{srcDtosAndUtilitiesDir}/action_rule_dtos.py",
+			"#{destDtosAndUtilitiesDir}/action_rule_dtos.py"
+		)
+
+		copy_tpl(
+			"#{srcDtosAndUtilitiesDir}/config_accessors.py",
+			"#{destDtosAndUtilitiesDir}/config_accessors.py"
+		)
+
+		copy_tpl(
+			"#{srcDtosAndUtilitiesDir}/db_helpers.py",
+			"#{destDtosAndUtilitiesDir}/db_helpers.py",
+			choices
+		)
+	
+		copy_tpl(
+			"#{srcDtosAndUtilitiesDir}/errors.py",
+			"#{destDtosAndUtilitiesDir}/errors.py",
+			choices
 		)
 
 		copy_tpl(
@@ -31,40 +71,8 @@ module AppGenPythons
 		)
 
 		copy_tpl(
-			"#{srcDtosAndUtilitiesDir}/simple_functions.py",
-			"#{destDtosAndUtilitiesDir}/simple_functions.py"
-		)
-
-		copy_tpl(
-			"#{srcDtosAndUtilitiesDir}/user_role_def.py",
-			"#{destDtosAndUtilitiesDir}/user_role_def.py"
-		)
-
-		copy_tpl(
-			"#{srcDtosAndUtilitiesDir}/action_rule_dtos.py",
-			"#{destDtosAndUtilitiesDir}/action_rule_dtos.py"
-		)
-
-		copy_tpl(
-			"#{srcDtosAndUtilitiesDir}/account_dtos.py",
-			"#{destDtosAndUtilitiesDir}/account_dtos.py"
-		)
-
-		copy_tpl(
-			"#{srcDtosAndUtilitiesDir}/validation_functions.py",
-			"#{destDtosAndUtilitiesDir}/validation_functions.py"
-		)
-
-		copy_tpl(
-			"#{srcDtosAndUtilitiesDir}/db_helpers.py",
-			"#{destDtosAndUtilitiesDir}/db_helpers.py",
-			choices
-		)
-
-		copy_tpl(
-			"#{srcDtosAndUtilitiesDir}/errors.py",
-			"#{destDtosAndUtilitiesDir}/errors.py",
-			choices
+			"#{srcDtosAndUtilitiesDir}/jobs.py",
+			"#{destDtosAndUtilitiesDir}/jobs.py"
 		)
 
 		copy_tpl(
@@ -74,14 +82,43 @@ module AppGenPythons
 		)
 
 		copy_tpl(
+			"#{srcDtosAndUtilitiesDir}/lost_found.py",
+			"#{destDtosAndUtilitiesDir}/lost_found.py"
+		)
+
+		copy_tpl(
 			"#{srcDtosAndUtilitiesDir}/name_strings.py",
 			"#{destDtosAndUtilitiesDir}/name_strings.py"
 		)
 
 		copy_tpl(
-			"#{srcDtosAndUtilitiesDir}/file_reference.py",
-			"#{destDtosAndUtilitiesDir}/file_reference.py",
-			choices
+			"#{srcDtosAndUtilitiesDir}/path_dict.py",
+			"#{destDtosAndUtilitiesDir}/path_dict.py"
+		)
+
+		copy_tpl(
+			"#{srcDtosAndUtilitiesDir}/simple_functions.py",
+			"#{destDtosAndUtilitiesDir}/simple_functions.py"
+		)
+
+		copy_tpl(
+			"#{srcDtosAndUtilitiesDir}/type_aliases.py",
+			"#{destDtosAndUtilitiesDir}/type_aliases.py"
+		)
+
+		copy_tpl(
+			"#{srcDtosAndUtilitiesDir}/user_role_def.py",
+			"#{destDtosAndUtilitiesDir}/user_role_def.py"
+		)
+
+		copy_tpl(
+			"#{srcDtosAndUtilitiesDir}/validation_functions.py",
+			"#{destDtosAndUtilitiesDir}/validation_functions.py"
+		)
+
+		copy_tpl(
+			"#{srcDtosAndUtilitiesDir}/web_dtos.py",
+			"#{destDtosAndUtilitiesDir}/web_dtos.py"
 		)
 
 		copy_tpl(
@@ -98,8 +135,14 @@ module AppGenPythons
 		destServicesDir = "src/#{projectNameSnake}/services"
 
 		copy_tpl(
-			"#{srcServicesDir}/env_manager.py",
-			"#{destServicesDir}/env_manager.py",
+			"#{srcServicesDir}/accounts_service.py",
+			"#{destServicesDir}/accounts_service.py",
+			choices
+		)
+
+		copy_tpl(
+			"#{srcServicesDir}/current_user_provider.py",
+			"#{destServicesDir}/current_user_provider.py",
 			choices
 		)
 
@@ -118,12 +161,6 @@ module AppGenPythons
 		copy_tpl(
 			"#{srcServicesDir}/template_service.py",
 			"#{destServicesDir}/template_service.py",
-			choices
-		)
-
-		copy_tpl(
-			"#{srcServicesDir}/accounts_service.py",
-			"#{destServicesDir}/accounts_service.py",
 			choices
 		)
 
@@ -297,6 +334,20 @@ module AppGenPythons
 			"src/tests/pytest.ini"
 		)
 
+		srcServicesDir = "src/#{fromLibs}/one_offs"
+		destServicesDir = "src/#{projectNameSnake}/one_offs"
+
+		copy_tpl(
+			"#{srcServicesDir}/db_print/__main__.py",
+			"#{destServicesDir}/db_print/__main__.py",
+			choices
+		)
+
+		copy_tpl(
+			"#{srcServicesDir}/db_setup/__main__.py",
+			"#{destServicesDir}/db_setup/__main__.py",
+			choices
+		)
 
 	end
 end

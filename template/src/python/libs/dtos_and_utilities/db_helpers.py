@@ -29,18 +29,7 @@ from .account_dtos import (
 	AccountInfo
 )
 
-class DbUsers(Enum):
-	OWNER_USER = "<%= lcPrefix %>_owner"
-	API_USER = "api_user"
-	JANITOR_USER = "janitor_user"
 
-	def format_user(self, host:str="localhost") -> str:
-		return f"'{self.value}'@'{host}'"
-
-	def __call__(self, host:Optional[str]=None) -> str:
-		if host:
-			return self.format_user(host)
-		return self.value
 
 
 def __build_placeholder_select__(
@@ -62,12 +51,11 @@ def __build_placeholder_select__(
 
 #int, String, int, int, int, str]]:
 
-def build_rules_query(
-	domain:UserRoleDomain,
+def build_site_rules_query(
 	userId: Optional[int]=None
-) -> CompoundSelect:
+) -> Select[Tuple[Integer, String, Float[float], Float[float], Integer, str]]:
 
-	user_rules_base_query = select(
+	user_rules_query = select(
 		ur_userFk.label("rule_userfk"),
 		ur_role.label("rule_name"),
 		ur_count.label("rule_count"),
@@ -80,23 +68,13 @@ def build_rules_query(
 			)
 		).label("rule_priority"),
 		dbLiteral(UserRoleDomain.Site.value).label("rule_domain"),
-	).where(ur_userFk == userId)
-
-
-	placeholder_select = __build_placeholder_select__(domain)
-	user_rules_query = user_rules_base_query \
-		if userId else placeholder_select.where(false())
-
-
-	if domain == UserRoleDomain.Site:
-		#don't want the shim if only selecting on userRoles
-		placeholder_select = placeholder_select.where(false())
-
-	query = union_all(
-		user_rules_query,
-		placeholder_select
 	)
-	return query
+
+	if userId is not None:
+		user_rules_query = user_rules_query.where(ur_userFk == userId)
+
+	return user_rules_query
+
 
 def row_to_user(row: RowMapping) -> AccountInfo:
 	return AccountInfo(

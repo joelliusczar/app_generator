@@ -1,4 +1,5 @@
 require 'fileutils'
+require 'securerandom'
 require_relative "generate_app_util"
 require_relative "generate_python_api"
 require_relative "generate_react_ts"
@@ -179,7 +180,7 @@ projectNameFlat = to_flat(projectName)
 
 if apiLangChoice == API_CHOICE_KEYS::PYTHON
 	dbChoice = dbMap[DB_CHOICE_KEYS::MY_SQL]
-elsif if apiLangChoice == API_CHOICE_KEYS::JAVA
+elsif apiLangChoice == API_CHOICE_KEYS::JAVA
 	dbChoice = dbMap[DB_CHOICE_KEYS::POSTGRESQL]
 else
 	dbChoice = dbMap[DB_CHOICE_KEYS::NONE]
@@ -196,6 +197,10 @@ title = projectName
 apiLang = apiLangMap[apiLangChoice]
 feLang = feLangMap[feLangChoice]
 db = dbChoice
+db_owner = lcPrefix + "_owner"
+local_namespace_uuid = SecureRandom.uuid
+local_auth_key = SecureRandom.alphanumeric(32)
+
 
 
 if File.exist?("./output")
@@ -230,32 +235,102 @@ copy_tpl(
 )
 
 copy_tpl(
-	"dev_ops/tool-versions",
-	"dev_ops/.tool-versions"
+	"dev_ops/ansible_setup.sh",
+	"dev_ops/ansible_setup.sh"
 )
 
 copy_tpl(
-	"dev_ops/dev_ops.rb",
-	"dev_ops/dev_ops.rb",
+	"dev_ops/dev_ops.sh",
+	"dev_ops/#{lcPrefix}_dev_ops.sh"
+)
+
+copy_tpl(
+	"dev_ops/vars/globals.yml",
+	"dev_ops/vars/globals.yml",
 	choices
 )
 
 copy_tpl(
-	"dev_ops/Gemfile",
-	"dev_ops/Gemfile"
-)
-
-copy_tpl(
-	"dev_ops/ruby_dependency_install.sh",
-	"dev_ops/ruby_dependency_install.sh",
+	"dev_ops/vars/local_keys.yml",
+	"dev_ops/vars/local_keys.yml",
 	choices
 )
 
+copy_tpl(
+	"dev_ops/vars/os_paths.yml",
+	"dev_ops/vars/os_paths.yml",
+	choices
+)
+
+copy_tpl(
+	"dev_ops/vars/vault.yml",
+	"dev_ops/vars/vault.yml"
+)
+
+copy_tpl(
+	"dev_ops/vars/vault_structure.yml",
+	"dev_ops/vars/vault_structure.yml"
+)
+
+copy_tpl(
+	"dev_ops/harden.yml",
+	"dev_ops/harden.yml"
+)
+
+copy_tpl(
+	"dev_ops/deploy_api.yml",
+	"dev_ops/deploy_api.yml"
+)
+
+copy_tpl(
+	"dev_ops/new_box.yml",
+	"dev_ops/new_box.yml",
+	choices
+)
+
+if apiLang.key != API_CHOICE_KEYS::NONE
+	copy_tpl(
+		"dev_ops/run_test.yml",
+		"dev_ops/run_test.yml",
+		choices
+	)
+end
+
+copy_tpl(
+	"dev_ops/setup_schedules.yml",
+	"dev_ops/setup_schedules.yml",
+	choices
+)
+
+copy_tpl(
+	"dev_ops/setup_service_user.yml",
+	"dev_ops/setup_service_user.yml"
+)
+
+copy_tpl(
+	"dev_ops/setup_tests.yml",
+	"dev_ops/setup_tests.yml",
+	choices
+)
+
+mkdir("dev_ops/roles")
+
+copy_tpl(
+	"gitmodules",
+	".gitmodules",
+)
 
 copy_tpl(
 	"readme.md",
 	"README.md",
 	choices
+)
+
+mkdir("sql_scripts/runtime")
+
+copy_tpl(
+	"dev_ops/harden.yml",
+	"dev_ops/harden.yml"
 )
 
 

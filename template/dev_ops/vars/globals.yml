@@ -1,0 +1,20 @@
+---
+app_details:
+  db: <%= projectNameSnake %>_db
+  name: <%= projectNameSnake %>
+  prefix: <%= ucPrefix %>
+  db_owner: <%= db_owner %>
+  engine: <%= projectNameSnake %>
+  api_version: v1
+src_dirs:
+  sql_scripts: ../sql_scripts
+  engine: ../src/<%= projectNameSnake %>
+  templates: files
+dest_dirs:
+  engine_dir_name: <%= projectNameSnake %>
+tech:
+  api_lang: <%= apiLang %>
+  db: <%= db %>
+url_segments:
+  base: <%= projectNameLc %>
+  tld: 

@@ -1,0 +1,8 @@
+---
+keys:
+  auth_secret_key: <%= local_auth_key %>
+  db_pass_api: apipass
+  db_pass_janitor: janitorpass
+  db_pass_owner: ownerpass
+  db_pass_setup: setuppass
+  namespace_uuid: <%= namespace_uuid %>

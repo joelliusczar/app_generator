@@ -1,9 +1,10 @@
+from .action_rule_dtos import ActionRule
+from pydantic import BaseModel as <%= ucPrefix %>BaseClass, ConfigDict, Field
 from typing import (
 	List,
 	TypeVar,
 	Generic
 )
-from pydantic import BaseModel as <%= ucPrefix %>BaseClass, ConfigDict, Field
 
 
 T = TypeVar("T")
@@ -40,3 +41,9 @@ class Named(<%= ucPrefix %>BaseClass):
 
 class NamedIdItem(IdItem, Named):
 	...
+
+class RuledEntity(<%= ucPrefix %>BaseClass):
+	rules: list[ActionRule]=cast(list[ActionRule], Field(
+		default_factory=list, frozen=False
+	))
+	viewsecuritylevel: Optional[int]=Field(default=0, frozen=False)

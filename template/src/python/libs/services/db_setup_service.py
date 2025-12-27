@@ -1,11 +1,11 @@
 from typing import Any
-from .env_manager import EnvManager
 from .template_service import TemplateService
 from sqlalchemy import create_engine, NullPool
 from sqlalchemy.engine import Connection
 from <%= projectNameSnake %>.dtos_and_utilities import (
-	is_name_safe,
+	ConfigAcessors,
 	DbUsers,
+	is_name_safe,
 	SqlScripts
 )
 from <%= projectNameSnake %>.tables import metadata
@@ -14,6 +14,15 @@ from pymysql.constants import CLIENT
 
 def is_db_name_safe(dbName: str) -> bool:
 	return is_name_safe(dbName, maxLen=100)
+
+def get_schema_hash() -> str:
+	with DbRootConnectionService() as rootConnService:
+		content = get_ddl_scripts(rootConnService.conn)
+		for scriptEnum in sorted(SqlScripts, key=lambda e: e.value[0]):
+			content += (scriptEnum.value[1] + "\n")
+
+		hashStr = hashlib.sha256(content.encode("utf-8")).hexdigest()
+		return hashStr
 
 """
 This class will mostly exist for the sake of unit tests
@@ -24,7 +33,7 @@ class DbRootConnectionService:
 		self.conn = self.conn = self.get_root_connection()
 
 	def get_root_connection(self) -> Connection:
-		dbPass = EnvManager.db_setup_pass()
+		dbPass = ConfigAcessors.db_setup_pass()
 		if not dbPass:
 			raise RuntimeError("The system is not configured correctly for that.")
 		engineAsRoot = create_engine(
@@ -58,7 +67,7 @@ class DbRootConnectionService:
 		)
 
 	def create_app_users(self):
-		dbPass = EnvManager.db_pass_api()
+		dbPass = ConfigAcessors.db_pass_api()
 		if not dbPass:
 			raise RuntimeError("The system is not configured correctly for that.")
 		self.create_db_user(
@@ -67,7 +76,7 @@ class DbRootConnectionService:
 			dbPass
 		)
 
-		dbPass = EnvManager.db_pass_janitor()
+		dbPass = ConfigAcessors.db_pass_janitor()
 		if not dbPass:
 			raise RuntimeError("The system is not configured correctly for that.")
 		self.create_db_user(
@@ -79,7 +88,7 @@ class DbRootConnectionService:
 
 
 	def create_owner(self):
-		dbPass = EnvManager.db_pass_owner()
+		dbPass = ConfigAcessors.db_pass_owner()
 		if not dbPass:
 			raise RuntimeError("The system is not configured correctly for that.")
 		self.create_db_user(
@@ -133,7 +142,7 @@ class DbOwnerConnectionService:
 		self.conn = self.get_owner_connection()
 
 	def get_owner_connection(self) -> Connection:
-		dbPass = EnvManager.db_pass_owner()
+		dbPass = ConfigAcessors.db_pass_owner()
 		if not dbPass:
 			raise RuntimeError("The system is not configured correctly for that.")
 		if not is_db_name_safe(self.dbName):
@@ -155,28 +164,43 @@ class DbOwnerConnectionService:
 	def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any):
 		self.conn.close()
 
-	def grant_api_roles(self):
-		template = TemplateService.load_sql_script_content(SqlScripts.GRANT_API)
-		if not is_db_name_safe(self.dbName):
-			raise RuntimeError("Invalid name was used")
-		script = template.replace("<dbName>", self.dbName)\
-			.replace("<apiUser>", DbUsers.API_USER("localhost"))
-		self.conn.exec_driver_sql(script)
-		self.conn.exec_driver_sql("FLUSH PRIVILEGES")
-
-	def grant_janitor_roles(self):
-		template = TemplateService.load_sql_script_content(
-			SqlScripts.GRANT_JANITOR
-		)
-		if not is_db_name_safe(self.dbName):
-			raise RuntimeError("Invalid name was used")
-		script = template.replace("<dbName>", self.dbName)\
-			.replace("<janitorUser>", DbUsers.JANITOR_USER("localhost"))
-		self.conn.exec_driver_sql(script)
+	def flush_privileges(self):
 		self.conn.exec_driver_sql("FLUSH PRIVILEGES")
 
 	def create_tables(self):
 		metadata.create_all(self.conn.engine)
+
+	def load_script_contents(self, scriptId: SqlScripts) -> str:
+		if not is_db_name_safe(self.dbName):
+			raise RuntimeError("Invalid name was used")
+		templateNoComments = re.sub(
+			r"^[ \t]*--.*\n",
+			"",
+			TemplateService.load_sql_script_content(
+				scriptId
+			),
+			flags=re.MULTILINE
+		)
+		return templateNoComments.replace("<dbName>", self.dbName)
+	
+	def run_defined_api_user_script(self, scriptId: SqlScripts):
+		script = self.load_script_contents(scriptId)\
+			.replace("<apiUser>", DbUsers.API_USER("localhost"))
+		self.conn.exec_driver_sql(script)
+
+	def run_defined_janitor_user_script(self, scriptId: SqlScripts):
+		script = self.load_script_contents(scriptId)\
+			.replace("<janitorUser>", DbUsers.JANITOR_USER("localhost"))
+		self.conn.exec_driver_sql(script)
+
+	def run_defined_script(self, scriptId: SqlScripts):
+		script = self.load_script_contents(scriptId)\
+			.replace("|","")\
+			.replace("DELIMITER","")
+
+		self.conn.exec_driver_sql(script)
+
+
 
 def setup_database(dbName: str):
 	with DbRootConnectionService() as rootConnService:
@@ -187,5 +211,4 @@ def setup_database(dbName: str):
 
 	with DbOwnerConnectionService(dbName, echo=False) as ownerConnService:
 		ownerConnService.create_tables()
-		ownerConnService.grant_api_roles()
-		ownerConnService.grant_janitor_roles()
+

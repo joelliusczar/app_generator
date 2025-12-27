@@ -37,7 +37,7 @@ def checkpw(guess: bytes, hash: bytes) -> bool:
 	return bcrypt.checkpw(guess, hash)
 
 def validate_email(email: str) -> ValidatedEmail:
-	return email_validator.validate_email(email) #pyright: ignore reportUnknownMemberType
+	return email_validator.validate_email(email, check_deliverability=False) #pyright: ignore reportUnknownMemberType
 
 def seconds_to_tuple(seconds: int) -> Tuple[int, int, int, int]:
 	m, s = divmod(seconds, 60)
@@ -70,6 +70,7 @@ def get_non_simple_chars(name: str) -> Optional[str]:
 			return m.group(0)
 		return None
 
+
 def is_name_safe(name: str, maxLen: int=50) -> bool:
 	if len(name) > maxLen:
 		return False
@@ -77,14 +78,17 @@ def is_name_safe(name: str, maxLen: int=50) -> bool:
 		return False
 	return True
 
+
 def _kvpSplit(kvp: str) -> Tuple[str, str]:
 	eqSplit = kvp.split("=")
 	if len(eqSplit) < 2:
 		return "name", kvp
 	return eqSplit[0], eqSplit[1]
 
+
 def role_dict(role: str) -> s2sDict:
 		return {p[0]:p[1] for p in (_kvpSplit(k) for k in role.split(";"))}
+
 
 def squash_sequential_duplicates(
 	compressura: Iterable[T],
@@ -105,10 +109,12 @@ def squash_sequential_duplicate_chars(
 ) -> str:
 	return "".join(squash_sequential_duplicates(compressura, pattern))
 
+
 def format_newlines_for_stream(input: str) -> str:
 	cleaned = input.replace("\n", " ")
 	output = f"{cleaned}\n"
 	return output
+
 
 def int_or_str(s: Union[int, str]) -> Union[int, str]:
 	#fastapi/pydantic stopped auto comnverting my string ints
@@ -118,6 +124,16 @@ def int_or_str(s: Union[int, str]) -> Union[int, str]:
 		return i
 	except:
 		return s
+
+
+def int_or_default(s: Union[int, str, None], default: int = 0) -> int:
+	if not s:
+		return default
+	try:
+		return int(s)
+	except:
+		return default
+
 
 def clean_search_term_for_like(searchTerm: str) -> str:
 	return searchTerm.replace("_","\\_").replace("%","\\%")

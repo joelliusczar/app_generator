@@ -6,7 +6,6 @@ import subprocess
 from typing import Iterator, List, Any, Callable, cast
 from datetime import datetime
 from <%= projectNameSnake %>.services import (
-	EnvManager,
 	AccountsService,
 	TemplateService,
 	UserActionsHistoryService,
@@ -15,7 +14,8 @@ from <%= projectNameSnake %>.services import (
 )
 from <%= projectNameSnake %>.dtos_and_utilities import (
 	AccountInfo,
-	ActionRule
+	ActionRule,
+	ConfigAcessors
 )
 from sqlalchemy.engine import Connection
 from .mocks.mock_db_constructors import (
@@ -91,9 +91,9 @@ def fixture_db_conn_in_mem(
 		if not requestPopulateFnName is None else "fixture_db_populate_factory"
 	populateFn = request.getfixturevalue(populateFnName)
 	populateFn()
-	envManager = EnvManager()
+	configAcessors = ConfigAcessors()
 	dbName=fixture_setup_db
-	conn = envManager.get_configured_api_connection(dbName, echo=echo)
+	conn = configAcessors.get_configured_api_connection(dbName, echo=echo)
 	try:
 		yield conn
 	finally:

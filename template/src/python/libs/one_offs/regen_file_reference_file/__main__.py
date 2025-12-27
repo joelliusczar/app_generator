@@ -10,7 +10,7 @@ def regen_file_reference_file(
 	with open(outputPath,"w") as out:
 		out.write("####### This file is generated. #######\n")
 		out.write("# edit regen_file_reference_file #\n")
-		out.write("# in <%= lcPrefix %>_dev_ops.sh and rerun\n")
+		out.write("# in mc_dev_ops.sh and rerun\n")
 		out.write("from enum import Enum\n\n")
 		out.write("class SqlScripts(Enum):\n")
 		for dirPath, _, files in os.walk(inputDir):
@@ -36,6 +36,6 @@ def regen_file_reference_file(
 		out.write("\t\treturn self.value[1]\n")
 
 if __name__ == "__main__":
-	inputDir = sys.argv[1]
-	outputPath = sys.argv[2]
+	inputDir = sys.argv[1] if len(sys.argv) > 1 else "../../../sql_scripts"
+	outputPath = sys.argv[2] if len(sys.argv) > 2 else "../file_reference.py"
 	regen_file_reference_file(inputDir, outputPath)
