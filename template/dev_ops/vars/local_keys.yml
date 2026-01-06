@@ -5,4 +5,4 @@ keys:
   db_pass_janitor: janitorpass
   db_pass_owner: ownerpass
   db_pass_setup: setuppass
-  namespace_uuid: <%= namespace_uuid %>
+  namespace_uuid: <%= local_namespace_uuid %>
