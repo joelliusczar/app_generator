@@ -328,10 +328,6 @@ copy_tpl(
 
 mkdir("sql_scripts/runtime")
 
-copy_tpl(
-	"dev_ops/harden.yml",
-	"dev_ops/harden.yml"
-)
 
 
 if apiLang.key == API_CHOICE_KEYS::PYTHON

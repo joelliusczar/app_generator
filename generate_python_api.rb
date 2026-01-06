@@ -135,8 +135,32 @@ module AppGenPythons
 		destServicesDir = "src/#{projectNameSnake}/services"
 
 		copy_tpl(
+			"#{srcServicesDir}/account_access_service.py",
+			"#{destServicesDir}/account_access_service.py",
+			choices
+		)
+
+		copy_tpl(
+			"#{srcServicesDir}/account_management_service.py",
+			"#{destServicesDir}/account_management_service.py",
+			choices
+		)
+
+		copy_tpl(
+			"#{srcServicesDir}/account_token_service.py",
+			"#{destServicesDir}/account_token_service.py",
+			choices
+		)
+
+		copy_tpl(
 			"#{srcServicesDir}/accounts_service.py",
 			"#{destServicesDir}/accounts_service.py",
+			choices
+		)
+
+		copy_tpl(
+			"#{srcServicesDir}/basic_user_provider.py",
+			"#{destServicesDir}/basic_user_provider.py",
 			choices
 		)
 
@@ -153,6 +177,12 @@ module AppGenPythons
 		)
 
 		copy_tpl(
+			"#{srcServicesDir}/job_service.py",
+			"#{destServicesDir}/job_service.py",
+			choices
+		)
+
+		copy_tpl(
 			"#{srcServicesDir}/process_service.py",
 			"#{destServicesDir}/process_service.py",
 			choices
@@ -165,10 +195,17 @@ module AppGenPythons
 		)
 
 		copy_tpl(
-			"#{srcServicesDir}/user_actions_history_service.py",
-			"#{destServicesDir}/user_actions_history_service.py",
+			"#{srcServicesDir}/actions_history_query_service.py",
+			"#{destServicesDir}/actions_history_query_service.py",
 			choices
 		)
+
+		copy_tpl(
+			"#{srcServicesDir}/actions_history_query_service.py",
+			"#{destServicesDir}/actions_history_query_service.py",
+			choices
+		)
+
 
 		copy_tpl(
 			"#{srcServicesDir}/__init__.py",

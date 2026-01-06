@@ -124,6 +124,12 @@ module AppGenReactTs
 		)
 
 		copy_tpl(
+			"src/#{fromClient}/src/Components/Shared/OrderByField.tsx",
+			"src/client/src/Components/Shared/OrderByField.tsx"
+		)
+
+
+		copy_tpl(
 			"src/#{fromClient}/src/Components/Shared/PrivateRoute.tsx",
 			"src/client/src/Components/Shared/PrivateRoute.tsx"
 		)

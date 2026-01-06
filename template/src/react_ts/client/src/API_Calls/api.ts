@@ -1,9 +1,9 @@
 import axios from "axios";
-import { apiAddress } from "../constants";
+import { API_ROOT } from "../constants";
 
 export const constructWebClient = () => {
 	return axios.create({
-		baseURL: apiAddress,
+		baseURL: API_ROOT,
 		withCredentials: true,
 	});
 };

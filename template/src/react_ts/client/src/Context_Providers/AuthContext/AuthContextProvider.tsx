@@ -5,7 +5,7 @@ import React, {
 	useCallback,
 } from "react";
 import PropTypes from "prop-types";
-import { loginWithCookie, webClient } from "../../API_Calls/userCalls";
+import { Calls, webClient } from "../../API_Calls/userCalls";
 import {
 	useDataWaitingReducer,
 	dataDispatches as dispatches,
@@ -124,7 +124,7 @@ export const AuthContextProvider = (props: { children: JSX.Element }) => {
 	]);
 
 	useEffect(() => {
-		const requestObj = loginWithCookie();
+		const requestObj = Calls.loginWithCookie();
 		if (loggedInUsername) return;
 
 		if(!document.cookie) return;

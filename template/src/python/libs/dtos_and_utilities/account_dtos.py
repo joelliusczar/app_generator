@@ -26,6 +26,22 @@ from .action_rule_dtos import (
 )
 
 
+starting_user_roles = [
+]
+
+def get_starting_site_roles(
+	scopes: Optional[Collection[str]]=None
+) -> Iterator[ActionRule]:
+	for rule in starting_user_roles:
+		if not scopes or rule.value in scopes:
+			yield ActionRule(
+				name=rule.value,
+				priority=RulePriorityLevel.USER.value,
+				span=60,
+				count=1
+			)
+
+
 class AccountInfoBase(FrozenBaseClass):
 	username: str
 	email: str

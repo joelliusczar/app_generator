@@ -11,8 +11,13 @@ from fastapi import (
 	Cookie
 )
 from fastapi.security import OAuth2PasswordRequestForm
-from <%= projectNameSnake %>.services import AccountsService,\
+from <%= projectNameSnake %>.services import (
+	AccountAccessService,
+	AccountManagementService,
+	AccountTokenCreator,
+	CurrentUserProvider,
 	ACCESS_TOKEN_EXPIRE_MINUTES
+)
 from <%= projectNameSnake %>.dtos_and_utilities import (
 	AccountCreationInfo,
 	AccountInfo,
@@ -22,16 +27,18 @@ from <%= projectNameSnake %>.dtos_and_utilities import (
 	AccountInfoBase,
 	build_error_obj,
 	PasswordInfo,
-	ActionRule
+	ActionRule,
 )
 from api_dependencies import (
-	accounts_service,
-	get_user_with_simple_scopes,
-	get_account_if_has_scope,
+	account_access_service,
+	account_management_service,
+	account_token_creator,
+	current_user_provider,
+	check_scope,
+	check_subjectuser,
 	get_user_from_token,
-	get_optional_user_from_token,
 	get_from_path_subject_user,
-	datetime_provider
+	datetime_provider,
 )
 from datetime import datetime
 
@@ -43,11 +50,15 @@ router = APIRouter(prefix=f"/accounts")
 @router.post("/open")
 def login(
 	response: Response,
-	formData: OAuth2PasswordRequestForm=Depends(),
-	accountService: AccountsService=Depends(accounts_service),
-	getDatetime: Callable[[], datetime]=Depends(datetime_provider)
+	formData: OAuth2PasswordRequestForm = Depends(),
+	accountAccessService: AccountAccessService = Depends(account_access_service),
+	accountTokenCreator: AccountTokenCreator = Depends(account_token_creator),
+	getDatetime: Callable[[], datetime] = Depends(datetime_provider),
+	currentUserProvider: CurrentUserProvider = Depends(
+		current_user_provider
+	)
 ) -> AuthenticatedAccount:
-	user = accountService.authenticate_user(
+	user = accountAccessService.authenticate_user(
 		formData.username,
 		formData.password.encode()
 	)
@@ -57,7 +68,8 @@ def login(
 			detail=[build_error_obj("Incorrect username or password")],
 			headers={"WWW-Authenticate": "Bearer"}
 		)
-	token = accountService.create_access_token(user.username)
+	currentUserProvider.set_user(user)
+	token = accountTokenCreator.create_access_token(user)
 	tokenLifetime = ACCESS_TOKEN_EXPIRE_MINUTES * 60
 	response.set_cookie(
 		key="access_token",
@@ -82,6 +94,7 @@ def login(
 		max_age=tokenLifetime
 	)
 	return AuthenticatedAccount(
+		id = user.id,
 		access_token=token,
 		token_type="bearer",
 		username=user.username,
@@ -92,16 +105,18 @@ def login(
 		login_timestamp=loginTimestamp
 	)
 
+
 @router.post("/open_cookie")
 def login_with_cookie(
 	access_token: str  = Cookie(default=None),
 	login_timestamp: float  = Cookie(default=0),
-	accountsService: AccountsService = Depends(accounts_service)
+	accountAccessService: AccountAccessService = Depends(account_access_service)
 ) -> AuthenticatedAccount:
 	uriDecodedToken = parse.unquote(access_token or "")
 	try:
-		user, expiration = get_user_from_token(uriDecodedToken, accountsService)
+		user, expiration = get_user_from_token(uriDecodedToken, accountAccessService)
 		return AuthenticatedAccount(
+			id = user.id,
 			access_token=access_token,
 			token_type="bearer",
 			username=user.username,
@@ -113,6 +128,7 @@ def login_with_cookie(
 		)
 	except:
 		return AuthenticatedAccount(
+			id=0,
 			access_token="",
 			token_type="bearer",
 			username="",
@@ -122,80 +138,109 @@ def login_with_cookie(
 			email=""
 		)
 
+
 @router.get("/check")
 def is_phrase_used(
 	username: str = "",
 	email: str = "",
-	loggedInUser: Optional[AccountInfo] = Depends(get_optional_user_from_token),
-	accountsService: AccountsService = Depends(accounts_service)
+	accountManagementService: AccountManagementService = Depends(
+		account_management_service
+	)
 ) -> dict[str, bool]:
 	return {
-		"username": accountsService.is_username_used(username),
-		"email": accountsService.is_email_used(email, loggedInUser)
+		"username": accountManagementService.is_username_used(username),
+		"email": accountManagementService.is_email_used(email)
 	}
+
 
 @router.post("/new")
 def create_new_account(
 	accountInfo: AccountCreationInfo,
-	accountsService: AccountsService = Depends(accounts_service)
+	accountManagementService: AccountManagementService = Depends(
+		account_management_service
+	)
 ) -> AccountInfo:
-	return accountsService.create_account(accountInfo)
+	return accountManagementService.create_account(accountInfo)
+
 
 @router.get("/list", dependencies=[
-	Security(get_user_with_simple_scopes, scopes=[UserRoleDef.USER_LIST.value])
+	Security(check_scope, scopes=[UserRoleDef.USER_LIST.value])
 ])
 def get_user_list(
 	searchTerm: Optional[str]=None,
 	page: int = 0,
 	pageSize: Optional[int] = None,
-	accountsService: AccountsService = Depends(accounts_service)
+	accountManagementService: AccountManagementService = Depends(
+		account_management_service
+	)
 ) -> TableData[AccountInfo]:
-	accounts = list(accountsService.get_account_list(
+	accounts = list(accountManagementService.get_account_list(
 		searchTerm=searchTerm,
 		page=page,
 		pageSize=pageSize
 	))
-	totalRows = accountsService.get_accounts_count()
+	totalRows = accountManagementService.get_accounts_count()
 	return TableData(totalrows=totalRows, items=accounts)
 
+
 @router.get("/search", dependencies=[
-	# Security(get_user_with_simple_scopes, scopes=[UserRoleDef.USER_LIST.value])
+	Security(
+		check_scope,
+		scopes=[UserRoleDef.USER_LIST.value]
+	)
 ])
 def search_users(
 	searchTerm: Optional[str]=None,
 	page: int = 0,
 	pageSize: Optional[int] = None,
-	accountsService: AccountsService = Depends(accounts_service)
+	accountManagementService: AccountManagementService = Depends(
+		account_management_service
+	)
 ) -> list[AccountInfo]:
-	accounts = list(accountsService.get_account_list(
+	accounts = list(accountManagementService.get_account_list(
 		searchTerm=searchTerm,
 		page=page,
 		pageSize=pageSize
 	))
 	return accounts
 
-@router.put("/account/{subjectuserkey}")
+
+@router.put(
+	"/account/{subjectuserkey}",
+	dependencies=[
+		Security(
+			check_subjectuser,
+			scopes=[UserRoleDef.USER_EDIT.value]
+		)
+	]
+)
 def update_account(
 	updatedInfo: AccountInfoBase,
-	prev: AccountInfo = Security(
-		get_account_if_has_scope,
-		scopes=[UserRoleDef.USER_EDIT.value]
-	),
-	accountsService: AccountsService = Depends(accounts_service)
+	accountManagementService: AccountManagementService = Depends(
+		account_management_service
+	)
 ) -> AccountInfo:
-	return accountsService.update_account_general_changes(updatedInfo, prev)
+	return accountManagementService.update_account_general_changes(
+		updatedInfo,
+	)
 
 
-@router.put("/update-password/{subjectuserkey}")
+@router.put(
+	"/update-password/{subjectuserkey}",
+	dependencies=[
+		Security(
+			check_subjectuser,
+			scopes=[UserRoleDef.USER_EDIT.value]
+		)
+	]
+)
 def update_password(
 	passwordInfo: PasswordInfo,
-	currentUser: AccountInfo = Security(
-		get_account_if_has_scope,
-		scopes=[UserRoleDef.USER_EDIT.value]
-	),
-	accountsService: AccountsService = Depends(accounts_service)
+	accountManagementService: AccountManagementService = Depends(
+		account_management_service
+	)
 ) -> bool:
-	if accountsService.update_password(passwordInfo, currentUser):
+	if accountManagementService.update_password(passwordInfo):
 		return True
 	raise HTTPException(
 			status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -206,37 +251,54 @@ def update_password(
 				)],
 		)
 
-@router.put("/update-roles/{subjectuserkey}")
+
+@router.put(
+	"/update-roles/{subjectuserkey}",
+	dependencies=[
+		Security(
+			check_subjectuser,
+			scopes=[UserRoleDef.USER_EDIT.value]
+		)
+	]
+)
 def update_roles(
 	roles: list[ActionRule],
-	prev: AccountInfo = Security(
-		get_account_if_has_scope,
-		scopes=[UserRoleDef.USER_EDIT.value]
+	accountManagementService: AccountManagementService = Depends(
+		account_management_service
 	),
-	accountsService: AccountsService = Depends(accounts_service)
+	prev: AccountInfo = Depends(get_from_path_subject_user)
 ) -> AccountInfo:
-	addedRoles = list(accountsService.save_roles(prev.id, roles))
-	return AccountInfo(**{**prev.model_dump(), "roles": addedRoles}) #pyright: ignore [reportUnknownArgumentType, reportGeneralTypeIssues]
+	addedRoles = list(accountManagementService.save_roles(prev.id, roles))
+	return AccountInfo(**prev.model_dump(exclude=["roles"]), roles = addedRoles) #pyright: ignore [reportArgumentType, reportGeneralTypeIssues]
 
-@router.get("/account/{subjectuserkey}")
+
+@router.get(
+	"/account/{subjectuserkey}",
+	dependencies=[
+		Security(
+			check_subjectuser,
+			scopes=[UserRoleDef.USER_EDIT.value]
+		)
+	]
+)
 def get_account(
-	accountInfo: AccountInfo = Security(
-		get_account_if_has_scope,
-		scopes=[UserRoleDef.USER_EDIT.value]
-	)
+	accountInfo: AccountInfo = Depends(get_from_path_subject_user)
 ) -> AccountInfo:
 	return accountInfo
 
+
 @router.get("/site-roles/user_list",dependencies=[
 	Security(
-		get_user_with_simple_scopes,
+		check_subjectuser,
 		scopes=[UserRoleDef.SITE_USER_LIST.value]
 	)
 ])
 def get_path_user_list(
-	accountsService: AccountsService = Depends(accounts_service)
+	accountManagementService: AccountManagementService = Depends(
+		account_management_service
+	)
 ) -> TableData[AccountInfo]:
-	pathUsers = list(accountsService.get_site_rule_users())
+	pathUsers = list(accountManagementService.get_site_rule_users())
 	return TableData(items=pathUsers, totalrows=len(pathUsers))
 
 
@@ -261,44 +323,49 @@ def validate_site_rule(
 		)
 	return rule
 
+
 @router.post("/site-roles/user_role/{subjectuserkey}",
 	dependencies=[
 		Security(
-			get_user_with_simple_scopes,
+			check_subjectuser,
 			scopes=[UserRoleDef.SITE_USER_ASSIGN.value]
 		)
 	]
 )
 def add_user_rule(
-	user: AccountInfo = Depends(get_from_path_subject_user),
+	subjectUser: AccountInfo = Depends(get_from_path_subject_user),
 	rule: ActionRule = Depends(validate_site_rule),
-	accountsService: AccountsService = Depends(accounts_service),
+	accountManagementService: AccountManagementService = Depends(
+		account_management_service
+	)
 ) -> ActionRule:
-	return accountsService.add_user_rule(user.id, rule)
+	return accountManagementService.add_user_rule(subjectUser.id, rule)
 
 
 @router.delete("/site-roles/user_role/{subjectuserkey}",
 	status_code=status.HTTP_204_NO_CONTENT,
 	dependencies=[
 		Security(
-			get_user_with_simple_scopes,
+			check_subjectuser,
 			scopes=[UserRoleDef.PATH_USER_ASSIGN.value]
 		)
 	]
 )
 def remove_user_rule(
 	rulename: str,
-	user: AccountInfo = Depends(get_from_path_subject_user),
-	accountsService: AccountsService = Depends(accounts_service),
+	subjectUser: AccountInfo = Depends(get_from_path_subject_user),
+	accountManagementService: AccountManagementService = Depends(
+		account_management_service
+	)
 ):
-	if not user:
+	if not subjectUser:
 		raise HTTPException(
 			status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
 			detail=[build_error_obj(
 				"User is required"
 			)],
 		)
-	accountsService.remove_user_site_rule(
-		user.id,
-		rulename
+	accountManagementService.remove_user_site_rule(
+		subjectUser.id,
+		rulename,
 	)

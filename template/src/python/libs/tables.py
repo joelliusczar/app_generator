@@ -1,24 +1,33 @@
 from typing import cast, Optional
 from sqlalchemy import (
-	Table,
-	MetaData,
-	Column,
-	Float,
-	Double,
+	BINARY,
 	Boolean,
-	LargeBinary,
-	Integer,
-	String,
+	Column,
+	Double,
+	Float,
 	ForeignKey,
 	Index,
+	Integer,
+	LargeBinary,
+	MetaData,
+	String,
+	Table,
 	Text
 )
 from sqlalchemy.sql.schema import Column
 
 
-
 metadata = MetaData()
 
+def get_ddl_scripts(conn: Connection) -> str:
+	
+	result = ""
+	for table in metadata.sorted_tables:
+		result += str(CreateTable(table).compile(conn))
+		for index in sorted(table.indexes or [], key=lambda i: i.name or ""):
+			result += (str(CreateIndex(index).compile(conn)) + "\n")
+
+	return result
 
 users = Table("users", metadata,
 	Column("pk", Integer, primary_key=True),
@@ -59,13 +68,30 @@ ur_count = cast(Column[Float[float]], userRoles.c.count)
 ur_priority = cast(Column[Integer], userRoles.c.priority)
 Index("idx_userroles", ur_userFk, ur_role, unique=True)
 
+user_agents = Table("useragents",metadata,
+	Column("pk", Integer, primary_key=True),
+	Column("content", Text, nullable=False),
+	Column("hash", BINARY(16), nullable=False),
+	Column("length", Integer, nullable=False),
+)
+
+uag_pk = cast(Column[Integer], user_agents.c.pk)
+uag_content = cast(Column[String], user_agents.c.content)
+uag_hash = cast(Column[BINARY], user_agents.c.hash)
+uag_length = cast(Column[Integer], user_agents.c.length)
+
+Index("idx_useragenthash", uag_hash)
+
+
 user_action_history = Table("useractionhistory", metadata,
 	Column("pk", Integer, primary_key=True),
 	Column("userfk", Integer, ForeignKey("users.pk"), nullable=True),
 	Column("action", String(50), nullable=False),
 	Column("timestamp", Double[float], nullable=True),
 	Column("queuedtimestamp", Double[float], nullable=False),
-	Column("requestedtimestamp", Double[float], nullable=True)
+	Column("ipv4address", String(24), nullable=True),
+	Column("ipv6address", String(50), nullable=True),
+	Column("useragentsfk", Integer, ForeignKey("useragents.pk"), nullable=True),
 )
 
 uah = user_action_history.c
@@ -78,4 +104,19 @@ uah_requestedTimestamp = cast(Column[Double[float]], uah.requestedtimestamp)
 
 
 
+jobs = Table('jobs', metadata,
+	Column('pk', Integer, primary_key=True, autoincrement=True),
+	Column("jobtype", String(50), nullable=False),
+	Column("status", String(50), nullable=True),
+	Column("instructions", String(2000), nullable=True),
+	Column("queuedtimestamp", Double[float], nullable=False),
+	Column('completedtimestamp', Double[float], nullable=True)
+)
 
+j = jobs.c
+j_pk = cast(Column[Integer], j.pk)
+j_type = cast(Column[String], j.jobtype)
+j_status = cast(Column[String], j.status)
+j_instructions = cast(Column[String], j.instructions)
+j_queuedtimestamp = cast(Column[Double[float]], j.queuedtimestamp)
+j_completedtimestamp = cast(Column[Double[float]], j.completedtimestamp)

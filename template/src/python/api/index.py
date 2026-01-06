@@ -39,11 +39,13 @@ def get_cors_origin_or_default(origin: str) -> str:
 		return origin
 	return cors_allowed_origins[0] if len(cors_allowed_origins) else ""
 
+
 def transForm_error(err: Any) -> dict[str, Any]:
 	msg = str(err["msg"]).removeprefix("Value error,").strip()
 	field = "->".join(f for f in err["loc"]) if len(err["loc"]) > 1 \
 		else err["loc"][0] if len(err["loc"]) > 0 else None
 	return build_error_obj(msg, field)
+
 
 @app.exception_handler(RequestValidationError) #pyright: ignore [reportUntypedFunctionDecorator, reportUnknownMemberType]
 def change_validation_errors(
@@ -52,6 +54,7 @@ def change_validation_errors(
 ) -> JSONResponse:
 	errorList = [transForm_error(e) for e in ex.errors()]
 	return JSONResponse({ "detail": errorList }, status_code=422)
+
 
 @app.exception_handler(StarletteHTTPException) #pyright: ignore [reportUntypedFunctionDecorator, reportUnknownMemberType]
 async def change_errors(
@@ -69,7 +72,7 @@ def handle_already_used_values(
 ) -> JSONResponse:
 	return JSONResponse(
 		{ "detail": ex.args[0] },
-		status_code=422,
+		status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
 		headers={
 			"Access-Control-Allow-Origin": get_cors_origin_or_default(
 				request.headers.get("origin", "")
@@ -85,7 +88,7 @@ def handle_invalid_email(
 ) -> JSONResponse:
 	return JSONResponse(
 		{ "detail": ex.args[0] },
-		status_code=422,
+		status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
 		headers={
 			"Access-Control-Allow-Origin": get_cors_origin_or_default(
 				request.headers.get("origin", "")
@@ -95,15 +98,113 @@ def handle_invalid_email(
 	)
 
 
+@app.exception_handler(NotFoundError) #pyright: ignore [reportUntypedFunctionDecorator, reportUnknownMemberType]
+def not_found(
+	request: Request,
+	ex: Exception
+) -> JSONResponse:
+	response = JSONResponse(content=
+		{ "detail": ex.args[0] },
+		status_code=status.HTTP_404,
+		headers={
+			"Access-Control-Allow-Origin": get_cors_origin_or_default(
+				request.headers.get("origin", "")
+			),
+			"access-control-allow-credentials": "true"
+		}
+	)
+	return response
+
+
+@app.exception_handler(NotLoggedInError) #pyright: ignore [reportUntypedFunctionDecorator, reportUnknownMemberType]
+def not_logged_in(
+	request: Request,
+	ex: Exception
+) -> JSONResponse:
+	response = JSONResponse(content=
+		{ "detail": [build_error_obj("Not authenticated")] },
+		status_code=status.HTTP_401_UNAUTHORIZED,
+		headers={
+			"Access-Control-Allow-Origin": get_cors_origin_or_default(
+				request.headers.get("origin", "")
+			),
+			"WWW-Authenticate": "Bearer"
+		}
+	)
+	return response
+
+
+@app.exception_handler(TooManyRequestsError) #pyright: ignore [reportUntypedFunctionDecorator, reportUnknownMemberType]
+def too_many_requests(
+	request: Request,
+	ex: Exception
+) -> JSONResponse:
+	response = JSONResponse(content=
+		{ "detail": [build_error_obj(
+				"Please wait "
+				f"{build_timespan_msg(seconds_to_tuple(ex.args[0]))} "
+				"before trying again"
+			)]
+		},
+		status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+		headers={
+			"Access-Control-Allow-Origin": get_cors_origin_or_default(
+				request.headers.get("origin", "")
+			),
+			"WWW-Authenticate": "Bearer"
+		}
+	)
+	return response
+
+@app.exception_handler(WrongPermissionsError) #pyright: ignore [reportUntypedFunctionDecorator, reportUnknownMemberType]
+def wrong_permissions(
+	request: Request,
+	ex: Exception
+) -> JSONResponse:
+	response = JSONResponse(content=
+		{ "detail": [build_error_obj(
+				"Insufficient permissions to perform that action"
+			)]
+		},
+		status_code=status.HTTP_403_FORBIDDEN,
+		headers={
+			"Access-Control-Allow-Origin": get_cors_origin_or_default(
+				request.headers.get("origin", "")
+			)
+		}
+	)
+	return response
+
+
+@app.exception_handler(NotImplementedError) #pyright: ignore [reportUntypedFunctionDecorator, reportUnknownMemberType]
+def not_implemented(
+	request: Request,
+	ex: Exception
+) -> JSONResponse:
+	response = JSONResponse(content=
+		{ "detail": [
+				build_error_obj("This functionality has not been implemented")
+			]
+		},
+		status_code=500,
+		headers={
+			"Access-Control-Allow-Origin": get_cors_origin_or_default(
+				request.headers.get("origin", "")
+			),
+			"access-control-allow-credentials": "true"
+		}
+	)
+	return response
+
+
 @app.exception_handler(Exception) #pyright: ignore [reportUntypedFunctionDecorator, reportUnknownMemberType]
 def everything_else(
 	request: Request,
 	ex: Exception
 ) -> JSONResponse:
-	logging.debugLogger.debug(
+	logging.logger.error(
 		"".join(TracebackException.from_exception(ex).format())
 	)
-	logging.logger.exception(ex)
 	response = JSONResponse(content=
 		{ "detail": [
 				build_error_obj("Onk! Caveman error! What do?")
@@ -118,6 +219,10 @@ def everything_else(
 		}
 	)
 	return response
+
+@app.get("/canary")
+def canary() -> str:
+	return "First Canary"
 
 if __name__ == "__main__":
 	if len(sys.argv) > 2:

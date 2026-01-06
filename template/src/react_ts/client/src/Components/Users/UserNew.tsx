@@ -4,7 +4,7 @@ import { Box, Typography } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { FormTextField } from "../Shared/FormTextField";
 import * as Yup from "yup";
-import { createUser } from "../../API_Calls/userCalls";
+import { Calls } from "../../API_Calls/userCalls";
 import debouncePromise from "debounce-promise";
 import { useSnackbar } from "notistack";
 import { DomRoutes } from "../../constants";
@@ -60,7 +60,7 @@ export function UserNew() {
 	const { handleSubmit, formState } = formMethods;
 	const callSubmit = handleSubmit(async values => {
 		try {
-			const requestObj = createUser({ values });
+			const requestObj = Calls.createUser({ values });
 			await requestObj.call();
 			navigate(DomRoutes.userLogin());
 			enqueueSnackbar("Save successful", { variant: "success"});
