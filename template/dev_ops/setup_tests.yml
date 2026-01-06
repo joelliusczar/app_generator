@@ -55,10 +55,10 @@
           - -m
           - '{{app_details["engine"]}}.one_offs.db_setup'
           - '{{app_details["db"]}}'
-<% else % >
+<% else %>
           - echo
           - 'no-op'
-<% end
+<% end %>
         creates: '/tmp/{{result.stdout}}'
       environment:
         DSF_APP_ROOT: '{{app_trunk}}'

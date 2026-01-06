@@ -147,8 +147,8 @@ module AppGenPythons
 		)
 
 		copy_tpl(
-			"#{srcServicesDir}/account_token_service.py",
-			"#{destServicesDir}/account_token_service.py",
+			"#{srcServicesDir}/account_token_creator.py",
+			"#{destServicesDir}/account_token_creator.py",
 			choices
 		)
 
@@ -177,8 +177,8 @@ module AppGenPythons
 		)
 
 		copy_tpl(
-			"#{srcServicesDir}/job_service.py",
-			"#{destServicesDir}/job_service.py",
+			"#{srcServicesDir}/jobs_service.py",
+			"#{destServicesDir}/jobs_service.py",
 			choices
 		)
 
