@@ -290,6 +290,14 @@ copy_tpl(
 
 if apiLang.key != API_CHOICE_KEYS::NONE
 	copy_tpl(
+		"dev_ops/replace_local_db.yml",
+		"dev_ops/replace_local_db.yml",
+		choices
+	)
+end
+
+if apiLang.key != DB_CHOICE_KEYS::NONE
+	copy_tpl(
 		"dev_ops/run_test.yml",
 		"dev_ops/run_test.yml",
 		choices
@@ -314,6 +322,14 @@ copy_tpl(
 )
 
 mkdir("dev_ops/roles")
+
+system(
+	"git",
+	"submodule",
+	"add",
+	"https://github.com/joelliusczar/ansible_roles",
+	"./template/dev_ops/roles/ansible_roles"
+)
 
 copy_tpl(
 	"gitmodules",

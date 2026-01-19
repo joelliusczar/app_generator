@@ -15,6 +15,7 @@ module AppGenUtils
 			
 	end
 
+
 	def to_snake(projectName, casing = nil)
 		casing = casing ? casing.to_sym() : nil
 
@@ -41,9 +42,11 @@ module AppGenUtils
 		return project_name
 	end
 
+
 	def to_flat(projectName)
 		projectName.delete("^a-zA-Z0-9_\-").downcase
 	end
+
 
 	def copy_tpl(srcFile, destFile, replacements = nil)
 		destFile = "./output/#{destFile}"
@@ -59,6 +62,7 @@ module AppGenUtils
 		File.write(destFile, content)
 	end
 
+
 	def copy_raw(srcFile, destFile)
 		destFile = "./output/#{destFile}"
 		destDir = File.dirname(destFile)
@@ -67,9 +71,18 @@ module AppGenUtils
 		FileUtils.cp("./template/#{srcFile}", destFile)
 	end
 
+
 	def mkdir(dest)
 		dest = "./output/#{dest}"
 		FileUtils.mkdir_p(dest)
+	end
+
+
+	def copy_dir(srcDir, destDir)
+		srcDirPath = "./template/#{srcDir}/"
+		destDirPath = "./output/#{destDir}/"
+		FileUtils.mkdir_p(destDirPath)
+		FileUtils.cp_r(Dir.glob("#{srcDirPath}*"), destDirPath)
 	end
 
 end

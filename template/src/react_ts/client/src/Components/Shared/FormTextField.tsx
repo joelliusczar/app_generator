@@ -14,13 +14,17 @@ type FormTextFieldProps<FormT extends FieldValues> = {
 	className?: string
 	type?: string
 	min?: string | number
-	disabled?: boolean
+	disabled?: boolean,
+	sx?: object
+	onKeyUp?: (e: React.KeyboardEvent<HTMLDivElement>) 
+		=> void
+	inputRef?: React.RefCallback<HTMLInputElement | undefined>
 };
 
-export function FormTextField<FormT extends FieldValues>(
+export const FormTextField = <FormT extends FieldValues>(
 	props: FormTextFieldProps<FormT>
-) {
-	const { name, label, formMethods, ...otherProps } = props;
+) => {
+	const { name, label, formMethods, inputRef, ...otherProps } = props;
 	const { control, register } = formMethods;
 
 	const { fieldState: { error } }
@@ -31,10 +35,15 @@ export function FormTextField<FormT extends FieldValues>(
 
 	const { ref, ...rest} = register(name);
 
+	const combinedRefs = (el: HTMLInputElement) => {
+		ref(el);
+		inputRef && inputRef(el);
+	};
+
 	return (
 		<TextField
 			{...rest}
-			inputRef={ref}
+			inputRef={combinedRefs}
 			label={label}
 			defaultValue=""
 			InputLabelProps={{ shrink: true }}
@@ -44,4 +53,4 @@ export function FormTextField<FormT extends FieldValues>(
 			{...otherProps}
 		/>
 	);
-}
+};

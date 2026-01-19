@@ -11,6 +11,11 @@ module AppGenJava
 
 		fromTop = "java"
 
+		copy_dir(
+			"src/.gradle",
+			"src/.gradle"
+		)
+
 		copy_tpl(
 			"src/java/gitattributes",
 			"src/.gitattributes"

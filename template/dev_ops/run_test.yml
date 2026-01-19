@@ -51,8 +51,8 @@
     - name: Run unit tests
       command:
         chdir: ../src/tests
-<% if db.key == API_CHOICE_KEYS::PYTHON %>
         argv:
+<% if db.key == API_CHOICE_KEYS::PYTHON %>
           - '../{{test_trunk}}/{{app_details["prefix"]|lower}}_env/bin/python'
           - -m
           - pytest

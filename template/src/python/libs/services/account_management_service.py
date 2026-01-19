@@ -30,6 +30,7 @@ from .current_user_provider import CurrentUserProvider
 from .actions_history_management_service import ActionsHistoryManagementService
 from .account_access_service import AccountAccessService
 from sqlalchemy.engine import Connection
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql.functions import coalesce
 from <%= projectNameSnake %>.tables import (
 	users, u_pk, u_username, u_email, u_disabled,
@@ -41,6 +42,11 @@ from email_validator import (
 	EmailNotValidError,
 	ValidatedEmail
 )
+
+
+ACCESS_TOKEN_EXPIRE_MINUTES=(24 * 60 * 7)
+ALGORITHM = "HS256"
+
 
 
 class AccountManagementService:
@@ -303,7 +309,7 @@ class AccountManagementService:
 		if not authenticated:
 			return False
 		hash = hashpw(passwordInfo.newpassword.encode())
-		stmt = update(users).values(hashedPW = hash).where(u_pk == currentUser.id)
+		stmt = update(users).values(hashedpw = hash).where(u_pk == currentUser.id)
 		self.conn.execute(stmt)
 		self.actions_history_management_service.add_user_action_history_item(
 			UserActions.CHANGE_PASS.value,
@@ -323,12 +329,13 @@ class AccountManagementService:
 			u_username,
 			u_displayName,
 			u_email,
-			rulesQuery.c.rule_userfk,
-			rulesQuery.c.rule_name,
-			rulesQuery.c.rule_count,
-			rulesQuery.c.rule_span,
-			rulesQuery.c.rule_priority,
-			rulesQuery.c.rule_domain
+			u_dirRoot,
+			rulesQuery.c.rule_userfk.label("rule.userfk"),
+			rulesQuery.c.rule_name.label("rule.name"),
+			rulesQuery.c.rule_count.label("rule.count"),
+			rulesQuery.c.rule_span.label("rule.span"),
+			rulesQuery.c.rule_priority.label("rule.priority"),
+			rulesQuery.c.rule_domain.label("rule.domain")
 		).select_from(users).join(
 			rulesQuery,
 			rulesQuery.c.rule_userfk == u_pk,
@@ -362,7 +369,13 @@ class AccountManagementService:
 			priority = None,
 			creationtimestamp = self.get_datetime().timestamp()
 		)
-		self.conn.execute(stmt)
+		try:
+			self.conn.execute(stmt)
+		except IntegrityError:
+			raise AlreadyUsedError.build_error(
+				f"{rule.name} is already used for user.",
+				"body->name"
+			)
 		self.actions_history_management_service.add_user_action_history_item(
 			UserActions.ADD_SITE_RULE.value,
 		)
